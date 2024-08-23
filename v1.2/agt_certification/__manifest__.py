@@ -16,7 +16,7 @@
     'author': 'Caret IT Solutions Pvt. Ltd.',
     'website': 'http://www.caretit.com',
     'category': 'Accounting',
-    'version': '1.2',
+    'version': '1.1',
     'depends': [
         'base',
         'account', 'sale', 'stock',

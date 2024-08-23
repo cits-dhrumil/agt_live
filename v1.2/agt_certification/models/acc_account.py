@@ -20,16 +20,16 @@ class AccountAccount(models.Model):
             account.sudo()._compute_parent_id()
 
     active = fields.Boolean(string="Active", default=True)
-    tipo_conta = fields.Selection(selection=[('GR', 'GR - Conta de 1.º grau da contabilidade geral'),
-                                             ('GA', 'GA - Conta agregadora ou integradora da contabilidade geral'),
-                                             ('GM', 'GM - Conta de movimento da contabilidade geral'),
-                                             ('AR', 'AR - Conta de 1.º grau da contabilidade analítica'),
+    tipo_conta = fields.Selection(selection=[('GR', 'GR - 1st degree account of general accounting'),
+                                             ('GA', 'GA - General ledger aggregating or integrating account'),
+                                             ('GM', 'GM - General ledger movement account'),
+                                             ('AR', 'AR - 1st degree account of analytical accounting'),
                                              ('AA',
-                                              'AA - Conta agregadora ou integradora da contabilidade analítica'),
-                                             ('AM', 'AM - Conta de movimento da contabilidade analítica')],
-                                  string="Grupo da conta", required=True, default="GM", copy=False)
-    parent_id = fields.Many2one('account.account', compute='_compute_parent_id', string="Conta Pai", store=True)
-    children_ids = fields.One2many('account.account', 'parent_id', 'Contas')
+                                              'AA - Analytical accounting aggregator or integrator account'),
+                                             ('AM', 'AM - Analytical accounting movement account')],
+                                  string="Account Group", required=True, default="GM", copy=False)
+    parent_id = fields.Many2one('account.account', compute='_compute_parent_id', string="Father Account", store=True)
+    children_ids = fields.One2many('account.account', 'parent_id', 'Accounts')
     taxonomia_id = fields.Many2one('taxonomia', string='Taxonomia')
     code = fields.Char(size=10, required=True, index=True)
     balance_with_context = fields.Float(compute='_compute_balance_with_context', string="Balance Between Dates")

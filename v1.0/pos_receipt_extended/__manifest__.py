@@ -8,7 +8,7 @@
 
 {
     'name': 'Pos Receipt Extended',
-    'version': '1.0',
+    'version': '1.1',
     'summary': 'POS Receipt Extended',
     'description': """POS Receipt Extended""",
     'category': 'POS',

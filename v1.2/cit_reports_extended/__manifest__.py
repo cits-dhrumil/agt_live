@@ -15,7 +15,7 @@
     'author': 'Caret IT Solutions Pvt. Ltd.',
     'website': 'http://www.caretit.com',
     'category': 'Reports',
-    'version': '1.2',
+    'version': '1.1',
     'depends': [
         'base','account','sale',
         'web','stock','agt_certification'

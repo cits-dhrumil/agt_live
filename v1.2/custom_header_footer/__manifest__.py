@@ -8,7 +8,7 @@
 
 {
     'name': 'Custom Header Footer',
-    'version': '1.2',
+    'version': '1.1',
     'category': 'Reports',
     'description': """
     Set Custom Header Footer for all Reports
