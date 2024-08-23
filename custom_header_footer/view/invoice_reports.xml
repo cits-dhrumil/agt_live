@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <template id="report_invoice_document_opc_inherited_header" inherit_id="account.report_invoice_document">
+              <xpath expr="//div[@name='address_same_as_shipping']" position="attributes">
+               <attribute name="class">d-none</attribute>
+            </xpath>
+           <xpath expr="//div[@name='address_same_as_shipping']/t/address" position="attributes">
+               <attribute name="class">d-none</attribute>
+            </xpath>
+            <xpath expr="//div[@id='partner_vat_address_same_as_shipping']" position="attributes">
+               <attribute name="class">d-none</attribute>
+            </xpath>
+
+             <xpath expr="//div[@name='no_shipping']" position="attributes">
+               <attribute name="class">d-none</attribute>
+            </xpath>
+<!--            <xpath expr="//div[@name='address_not_same_as_shipping']" position="attributes">-->
+<!--               <attribute name="class">d-none</attribute>-->
+<!--            </xpath>-->
+             <xpath expr="//div[@name='address_not_same_as_shipping']/t/address" position="attributes">
+               <attribute name="class">d-none</attribute>
+            </xpath>
+        </template>
+</odoo>

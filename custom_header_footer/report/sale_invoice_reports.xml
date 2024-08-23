@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="ec_report_saleorder_document" inherit_id="sale.report_saleorder_document">
+        <xpath expr="//t[@t-call='web.external_layout']" position="attributes">
+            <attribute name="t-call">custom_header_footer.ec_invoice_external_layout</attribute>
+        </xpath>
+    </template>
+
+    <template id="ec_report_invoice_document" inherit_id="account.report_invoice_document">
+        <xpath expr="//t[@t-call='web.external_layout']" position="attributes">
+            <attribute name="t-call">custom_header_footer.ec_invoice_external_layout</attribute>
+        </xpath>
+    </template>
+
+    <template id="ec_report_payment_receipt_document" inherit_id="account.report_payment_receipt_document">
+        <xpath expr="//t[@t-call='web.external_layout']" position="attributes">
+            <attribute name="t-call">custom_header_footer.ec_invoice_external_layout</attribute>
+        </xpath>
+    </template>
+
+    <template id="ec_report_delivery_oc" inherit_id="stock.report_picking">
+        <xpath expr="//t[@t-call='web.external_layout']" position="attributes">
+            <attribute name="t-call">custom_header_footer.ec_invoice_external_layout</attribute>
+        </xpath>
+    </template>
+    <template id="ec_report_return_slip" inherit_id="stock.report_return_slip">
+        <xpath expr="//t[@t-call='web.external_layout']" position="attributes">
+            <attribute name="t-call">custom_header_footer.ec_invoice_external_layout</attribute>
+        </xpath>
+    </template>
+
+    <!-- paperformat  -->
+    <record id="sale.action_report_saleorder" model="ir.actions.report">
+        <field name="paperformat_id" ref="custom_header_footer.paperformat_custom_header_footer"/>
+    </record>
+    <record id="account.account_invoices" model="ir.actions.report">
+        <field name="paperformat_id" ref="custom_header_footer.paperformat_custom_header_footer_invoice"/>
+    </record>
+    <record id="account.account_invoices_without_payment" model="ir.actions.report">
+        <field name="paperformat_id" ref="custom_header_footer.paperformat_custom_header_footer_invoice"/>
+    </record>
+    <record id="sale.action_report_pro_forma_invoice" model="ir.actions.report">
+        <field name="paperformat_id" ref="custom_header_footer.paperformat_custom_header_footer"/>
+    </record>
+    <record id="stock.action_report_delivery" model="ir.actions.report">
+        <field name="paperformat_id" ref="custom_header_footer.paperformat_custom_header_footer"/>
+    </record>
+    <record id="stock.action_report_picking" model="ir.actions.report">
+        <field name="paperformat_id" ref="custom_header_footer.paperformat_custom_header_footer"/>
+    </record>
+     <record id="account.action_report_payment_receipt" model="ir.actions.report">
+        <field name="paperformat_id" ref="custom_header_footer.paperformat_custom_header_footer"/>
+    </record>
+</odoo>

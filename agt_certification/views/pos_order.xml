@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_pos_form_inherited" model="ir.ui.view">
+        <field name="name">pos.order.inherited.hash</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="certify" type="object" string="Certify"
+                        id="custom_primary"
+                        confirm="After this action you can not change this sale order anymore. You will have to
+                                 create a new one or duplicate. Do you wish to proceed?" class="oe_highlight"/>
+            </xpath>
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="hash" invisible="1"/>
+                <field name="hash_control" invisible="1"/>
+                <field name="hash_date" invisible="1"/>
+                <field name="certificated" invisible="1"/>
+                <field name="atcud" invisible="1"/>
+                <field name="qr_code_at" invisible="1"/>
+                <field name="qr_code_at_img" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
