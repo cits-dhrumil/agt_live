@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- invoice report-->
+    <template id="ec_invoice_external_layout">
+        <!-- Multicompany -->
+        <t t-if="not o and doc">
+            <t t-set="o" t-value="doc"/>
+        </t>
+        <t t-if="o and 'company_id' in o">
+            <t t-set="company" t-value="o.company_id"></t>
+        </t>
+        <t t-if="not o or not 'company_id' in o">
+            <t t-set="company" t-value="res_company"></t>
+        </t>
+        <t t-call="custom_header_footer.ec_invoice_external_layout_header"/>
+        <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-call="web.address_layout"/>
+            <t t-raw="0"/>
+        </div>
+        <t t-call="custom_header_footer.ec_invoice_external_layout_footer"/>
+    </template>
+    <template id="ec_invoice_external_layout_header">
+        <div t-attf-class="header o_company_#{company.id}_layout"
+             style="margin-left:-5px">
+            <t>
+                <img t-if="company.logo"
+                     t-att-src="image_data_uri(company.logo)"
+                     alt="Logo" style="max-height:100px;width:20%;"/>
+                <table style="padding-left: 5px;padding-top: 2px;font-size: 12px;" class="table-borderless" width="100%">
+                    <tbody>
+                    <tr>
+                        <td style="border:none;padding: 0;" width="40">
+                            <div style="d-flex;padding-right:10px;">
+                                <b><span t-field="company.partner_id.name"/></b><br/>
+                                <span t-field="company.partner_id.street"/>,<span t-field="company.partner_id.city"/>
+                                <span t-field="company.partner_id.zip"/>,<span t-field="company.partner_id.state_id.name"/>,<span t-field="company.partner_id.country_id.name"/>
+<!--                                <span t-field="company.partner_id" t-options='{"widget": "contact", "fields": ["address"], "no_marker": true}'>-->
+<!--                                    <div class="bg-light border-0 rounded h-100 d-flex flex-column align-items-center justify-content-center p-4 w-100 opacity-75 text-muted text-center">-->
+<!--                                        <strong>Company address block</strong>-->
+<!--                                        <div>Contains the company address.</div>-->
+<!--                                    </div>-->
+<!--                                </span>-->
+                            </div>
+                            <div style="d-flex">Contactos:  <span t-field="company.partner_id.phone"/>/<span t-field="company.partner_id.mobile"/>
+                            </div>
+                            <div class="d-flex">
+                                Email: <span t-field="company.partner_id.email"/>
+                            </div>
+                            <div class="d-flex">
+                                NIF : <span t-esc="company.partner_id.vat"/>
+                            </div>
+                        </td>
+                        <td width="20%"></td>
+                        <td style="border:none;" width="40%">
+                            <h5 t-if="o._name == 'account.move'" style="font-weight:bold;">
+                                    <span t-if="o.move_type == 'out_invoice' and (( o.journal_id.saft_inv_type!='VD' ) and o.journal_id.saft_inv_type!='ND' and o.journal_id.saft_inv_type!='FR' ) and o.state == 'posted' ">
+                                        Fatura
+                                    </span>
+                                    <span t-if="o.state == 'draft'">
+                                        Nota Informativa
+                                    </span>
+                                    <span t-if="o.move_type == 'out_invoice' and o.state == 'cancel'">Fatura Anulada</span>
+                                    <span t-if="o.move_type=='out_refund' and o.state == 'posted'">
+                                        Nota de Crédito
+                                    </span>
+                                    <span t-if="o.move_type=='in_refund' and o.state == 'posted'">
+                                        Nota de Débito
+                                    </span>
+                                    <span t-if="o.move_type=='in_invoice' and o.state == 'posted'">
+                                        Fatura
+                                    </span>
+                                    <span t-if="o.move_type=='in_invoice' and o.state == 'cancel'">Fatura Anulada</span>
+                                    <span t-if="o.move_type == 'out_invoice' and (( o.journal_id.saft_inv_type=='VD' ) and o.state == 'posted')">
+                                        Fatura
+                                    </span>
+                                    <span t-if="o.move_type == 'out_invoice' and (( o.journal_id.saft_inv_type=='ND' ) and o.state == 'posted')">
+                                        Nota de Débito
+                                    </span>
+                                    <span t-if="o.move_type == 'out_refund' and o.state == 'cancel'">Nota de Crédito Anulada
+                                    </span>
+                                    <span t-if="o.move_type == 'in_refund' and o.state == 'cancel'">Nota de Crédito Anulada
+                                    </span>
+                                    <span t-if="o.move_type == 'out_invoice' and o.journal_id.saft_inv_type=='FR' and o.state == 'posted'">
+                                        Fatura/Recibo
+                                    </span>
+                                    <span t-if="o.name and o.state!='draft'">
+                                        nº
+                                        <span t-if="o.move_type == 'out_invoice'">
+                                            <span t-if="o.journal_id.saft_inv_type=='FT'">FT</span>
+                                            <span t-if="o.journal_id.saft_inv_type=='FR'">FR</span>
+                                            <span t-if="o.journal_id.saft_inv_type=='ND'">ND</span>
+                                            <span t-if="o.journal_id.saft_inv_type=='VD'">VD</span>
+                                            <span t-if="o.journal_id.saft_inv_type=='AA'">AA</span>
+                                            <span t-if="o.journal_id.saft_inv_type=='DA'">DA</span>
+                                            <span t-if="o.journal_id.saft_inv_type=='FS'">FS</span>
+                                        </span>
+                                        <span t-if="o.move_type == 'out_refund'">NC</span>
+                                        <span t-field="o.name"/>
+                                    </span>
+                            </h5>
+                            <h5 t-if="o._name == 'sale.order'" style="font-weight:bold;">
+                                <t t-if="not doc.certificated">
+                                    <t t-if="doc.state == 'cancel'">
+                                        <span>Rascunho Cancelado</span>
+                                    </t>
+                                    <t t-if="not doc.state == 'cancel'">
+                                        <span>Rascunho</span>
+                                    </t>
+                                </t>
+                                <t t-if="doc.certificated">
+                                    <t t-if="not doc.state == 'cancel'">
+                                        <span t-if="doc.type_doc == 'OR' and 'OR' in doc.name">Orçamento #</span>
+                                        <span t-if="doc.type_doc == 'NE' and 'OR' not in doc.name">Nota de Encomenda #</span>
+                                        <span t-if="doc.type_doc == 'PP'">Fatura Pro-Forma nº</span>
+                                        <span t-if="doc.type_doc == 'FC'">Fatura de Consignação nº</span>
+                                    </t>
+                                    <t t-if="doc.state == 'cancel'">
+                                        <span t-if="doc.type_doc == 'OR' and 'OR' in doc.name">Orçamento Cancelado nº</span>
+                                        <span t-if="doc.type_doc == 'NE' and 'OR' not in doc.name">Nota de Encomenda Cancelada nº</span>
+                                        <span t-if="doc.type_doc == 'PP'">Pro-Forma Cancelada nº</span>
+                                        <span t-if="doc.type_doc == 'FC'">Fatura de Consignação Cancelada nº</span>
+                                    </t>
+                                </t>
+                                <span t-field="doc.name"/>
+                            </h5>
+                            <h5 t-if="o._name == 'stock.picking'" style="font-weight:bold;">
+                                <span t-if="o.state== 'done' and o.picking_type_id.code=='outgoing' and o.is_gc==True">
+                                    Guia de Consignação
+                                </span>
+                                <span t-if="o.state== 'done' and o.picking_type_id.code=='outgoing' and o.is_gc!=True">
+                                    Guia de Remessa
+                                </span>
+                                <span t-if="o.state== 'done' and o.picking_type_id.code!='outgoing' and o.is_gd!=True">
+                                    Guia de Transporte
+                                </span>
+                                <span t-if="o.state== 'done' and o.picking_type_id.code=='incoming' and o.is_gd==True">
+                                    Guia de Devolução
+                                </span>
+                                <span t-if="o.state != 'done'">Rascunho</span>
+                                nº
+                                <span t-field="o.name"/>
+                            </h5>
+                            <h5 t-if="o._name == 'account.payment'"><strong>Recibo: RG <span t-field="o.name"/></strong></h5>
+                                    <div class="mb-0"
+                                             t-field="o.partner_id"
+                                             t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;name&quot;], &quot;no_marker&quot;: True}"/>
+                                    <div t-if="o.partner_id.vat"
+                                         id="partner_vat_address_same_as_shipping"
+                                         >
+                                        <div>Contactos:  <span t-field="o.partner_id.phone"/>/<span t-field="o.partner_id.mobile"/>
+                                        </div>
+                                        <div>
+                                            Email: <span t-field="o.partner_id.email"/>
+                                        </div>
+                                        <t t-if="o.company_id.account_fiscal_country_id.vat_label"
+                                           t-out="o.company_id.account_fiscal_country_id.vat_label"
+                                           id="inv_tax_id_label"/>
+                                        <t t-else="">NIF</t>:
+                                        <span t-field="o.partner_id.vat"/>
+                                    </div>
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+                <table style="padding-left: 5px;padding-top: 15px;font-size: 14px;" class="table-borderless" width="100%" height="50px">
+                    <tbody>
+                         <tr>
+                            <td style="text-align:left;vertical-align: top;">
+                                <b>Operador: <span t-if="request.env.user" t-esc="request.env.user.name"/></b>
+                            </td>
+                            <td style="vertical-align: bottom;">
+                                    <b>Original</b>
+<!--                                    <span t-if="o.isprinted==True">&#160;(2ª Via)</span>-->
+                            </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </t>
+        </div>
+    </template>
+    <template id="ec_invoice_external_layout_footer">
+        <div t-attf-class="footer o_standard_footer o_company_#{company.id}_layout">
+            <div  style="border:none;text-align:right">
+                <div t-if="report_type == 'pdf'" class="text-muted">
+                    Page: <span class="page"/> / <span class="topage"/>
+                </div>
+            </div>
+        </div>
+    </template>
+</odoo>

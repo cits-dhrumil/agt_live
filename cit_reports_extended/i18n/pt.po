@@ -1,0 +1,984 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* cit_reports_extended
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 17.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-07-17 11:47+0000\n"
+"PO-Revision-Date: 2024-07-17 11:47+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "(2ª Via)"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.at_processado_por
+msgid "- Processado por programa validado nº 0000134/01180000/AGT/2024.Odoo"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model:ir.model.fields.selection,name:cit_reports_extended.selection__res_company__n_copies_invoice__10
+#: model:ir.model.fields.selection,name:cit_reports_extended.selection__res_company__n_copies_picking__10
+msgid "10"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid ""
+"<b>Assinatura do Cliente: </b>\n"
+"                            ____________________________________"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "<b>Dados Bancários:</b>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "<b>Dados para pagamento por multibanco:</b>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "<b>Local Descarga:</b>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "<b>Motivo de Anulação:</b>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "<b>Shipping Date:</b>"
+msgstr "<b>Data de envio:</b>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "<b>Unload Date:</b>"
+msgstr "<b>Data de descarregamento:</b>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid ""
+"<br/>\n"
+"                                    <b>Shipping Address:</b>"
+msgstr "br/&gt; <b>Endereço de entrega:</b>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid ""
+"<br/>\n"
+"                                    <b>Unload Address:</b>"
+msgstr "<br/> <b>Endereço de descarregamento:</b>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid ""
+"<br/>\n"
+"                                    Montante:"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid ""
+"<br/>\n"
+"                                    Referência:"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid ""
+"<br/>\n"
+"                                <b>vehicle:</b>"
+msgstr "<br/> <b>veículo:</b>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid ""
+"<span style=\"float:right;font-size:11px;margin-"
+"top:9px\">Decuplicated</span>"
+msgstr ""
+"<span style=\"float:right;font-size:11px;margin-top:9px\">Decuplicado</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "<span style=\"float:right;font-size:11px;margin-top:9px\">Duplicate</span>"
+msgstr "<span style=\"float:right;font-size:11px;margin-top:9px\">Duplicar</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid ""
+"<span style=\"float:right;font-size:11px;margin-top:9px\">Nonuplicado</span>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid ""
+"<span style=\"float:right;font-size:11px;margin-top:9px\">Octuplicado</span>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "<span style=\"float:right;font-size:11px;margin-top:9px\">Original</span>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "<span style=\"float:right;font-size:11px;margin-top:9px\">Quadruple</span>"
+msgstr ""
+"<span style=\"float:right;font-size:11px;margin-top:9px\">Quádruplo</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid ""
+"<span style=\"float:right;font-size:11px;margin-top:9px\">Quintupled</span>"
+msgstr ""
+"<span style=\"float:right;font-size:11px;margin-"
+"top:9px\">Quintuplicado</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid ""
+"<span style=\"float:right;font-size:11px;margin-"
+"top:9px\">Septuplicado</span>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid ""
+"<span style=\"float:right;font-size:11px;margin-"
+"top:9px\">Sextuplicado</span>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid ""
+"<span style=\"float:right;font-size:11px;margin-top:9px\">Triplicate</span>"
+msgstr ""
+"<span style=\"float:right;font-size:11px;margin-top:9px\">Triplicado</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "<span>Draft Canceled</span>"
+msgstr "<span>Rascunho Cancelado</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "<span>Draft</span>"
+msgstr "<span>Rascunho</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "<strong>AT Code:</strong>"
+msgstr "<strong>Código AT:</strong>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.payments_group
+msgid "<strong>Amount Due</strong>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.document_tax_totals_opencloud
+msgid "<strong>Base</strong>"
+msgstr "<strong>Incidência</strong>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "<strong>Data de Carga:</strong>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "<strong>Data de Descarga:</strong>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.document_tax_totals_opencloud
+msgid "<strong>Imposto</strong>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "<strong>Invoice Date:</strong>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "<strong>Matrícula:</strong>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "<strong>Quotation:</strong>"
+msgstr "<strong>Orçamento:</strong>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "<strong>Refund Date:</strong>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.document_tax_totals_opencloud
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "<strong>Subtotal</strong>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "<strong>Taxpayer:</strong>"
+msgstr "<strong>Contribuinte:</strong>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.document_tax_totals_opencloud
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "<strong>Total</strong>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.document_tax_totals_opencloud
+msgid "<strong>Valor</strong>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "<strong>Y/VAT Nº</strong>"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "AA"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.at_at_code
+msgid "ATCUD:"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model:ir.model,name:cit_reports_extended.model_report_account_report_invoice
+msgid "Account report"
+msgstr "Relatório de contas sem linhas de pagamento"
+
+#. module: cit_reports_extended
+#: model:ir.model,name:cit_reports_extended.model_report_account_report_invoice_with_payments
+msgid "Account report with payment lines"
+msgstr "Relatório de contas com linhas de pagamento"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid ""
+"Ao abrigo do nº5 do artigo 78 do CIVA, agradecemos a devolução do duplicado desta Nota\n"
+"                            de Crédito, devidamente assinada e carimbada."
+msgstr ""
+
+#. module: cit_reports_extended
+#: model:ir.model.fields,field_description:cit_reports_extended.field_res_company__background_image
+msgid "Apps Menu Background Image"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Base"
+msgstr ""
+
+#. module: cit_reports_extended
+#. odoo-python
+#: code:addons/cit_reports_extended/models/account_move.py:0
+#, python-format
+msgid "Cancelled Credit Note - %s"
+msgstr "Nota de Crédito Cancelada - %s"
+
+#. module: cit_reports_extended
+#. odoo-python
+#: code:addons/cit_reports_extended/models/account_move.py:0
+#, python-format
+msgid "Cancelled Invoice - %s"
+msgstr "Fatura Cancelada - %s"
+
+#. module: cit_reports_extended
+#. odoo-python
+#: code:addons/cit_reports_extended/models/account_move.py:0
+#, python-format
+msgid "Cancelled Vendor Bill - %s"
+msgstr "Fatura de Fornecedor Cancelada - %s"
+
+#. module: cit_reports_extended
+#. odoo-python
+#: code:addons/cit_reports_extended/models/account_move.py:0
+#, python-format
+msgid "Cancelled Vendor Credit Note - %s"
+msgstr "Nota de Crédito de Fornecedor Cancelada - %s"
+
+#. module: cit_reports_extended
+#: model:ir.model,name:cit_reports_extended.model_res_company
+msgid "Companies"
+msgstr "Empresas"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "Consignation Picking"
+msgstr "Seleção de consignação"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "Copy of Original Document-"
+msgstr "Cópia do documento original-"
+
+#. module: cit_reports_extended
+#. odoo-python
+#: code:addons/cit_reports_extended/models/account_move.py:0
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.account_invoice_form_view_transportation_data
+#, python-format
+msgid "Credit Note"
+msgstr "Nota de Crédito"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.account_invoice_form_view_transportation_data
+msgid "Debit Note"
+msgstr "Nota de débito"
+
+#. module: cit_reports_extended
+#. odoo-python
+#: code:addons/cit_reports_extended/models/account_move.py:0
+#, python-format
+msgid "Credit Note - %s"
+msgstr "Nota de Crédito - %s"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Cópia do Documento Original -"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "DA"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_bank_statement_line__loading_date
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_move__loading_date
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_payment__loading_date
+msgid "Date of Loading"
+msgstr "Data de Carga"
+
+#. module: cit_reports_extended
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_bank_statement_line__unloading_date
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_move__unloading_date
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_payment__unloading_date
+msgid "Date of Unloading"
+msgstr "Data de Descarga"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Decuplicado"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "Draft"
+msgstr "Rascunho"
+
+#. module: cit_reports_extended
+#. odoo-python
+#: code:addons/cit_reports_extended/models/account_move.py:0
+#, python-format
+msgid "Draft Invoice"
+msgstr "Fatura Rascunho"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Duplicado"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Entidade:"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "Entreguei: _____________________________"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Este Documento não serve como Fatura."
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "FR"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "FS"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "FT"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Fatura"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Fatura Anulada"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Fatura de Compra"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Fatura de Compra Cancelada"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Fatura/Recibo"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Final Consumer"
+msgstr "Consumidor Final"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.document_tax_totals_opencloud
+msgid "Imposto"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model:ir.model.fields.selection,name:cit_reports_extended.selection__res_company__default_sidebar_preference__invisible
+#: model:ir.model.fields.selection,name:cit_reports_extended.selection__res_users__sidebar_type__invisible
+msgid "Invisible"
+msgstr "Invisível"
+
+#. module: cit_reports_extended
+#. odoo-python
+#: code:addons/cit_reports_extended/models/account_move.py:0
+#, python-format
+msgid "Invoice - %s"
+msgstr "Fatura - %s"
+
+#. module: cit_reports_extended
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_bank_statement_line__isprinted
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_move__isprinted
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_payment__isprinted
+msgid "Is Printed"
+msgstr "Foi Impresso"
+
+#. module: cit_reports_extended
+#: model:ir.model,name:cit_reports_extended.model_account_move
+msgid "Journal Entry"
+msgstr "Entrada do Diário"
+
+#. module: cit_reports_extended
+#: model:ir.model.fields.selection,name:cit_reports_extended.selection__res_company__default_sidebar_preference__large
+#: model:ir.model.fields.selection,name:cit_reports_extended.selection__res_users__sidebar_type__large
+msgid "Large"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.account_invoice_form_view_transportation_data
+msgid "Load Data"
+msgstr "Dados de Carga"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "NC"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "ND"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Nonuplicado"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Nota Informativa"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Nota de Crédito"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Nota de Crédito Anulada"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Nota de Crédito de Fornecedor"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Nota de Crédito de Fornecedor Cancelada"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Nota de Débito"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model:ir.model.fields,field_description:cit_reports_extended.field_res_company__n_copies_picking
+msgid "Number of Copies for Picking"
+msgstr "Nº Cópias Guias"
+
+#. module: cit_reports_extended
+#: model:ir.model.fields,field_description:cit_reports_extended.field_res_company__n_copies_invoice
+msgid "Number of Copies for invoice and payment"
+msgstr "Nº Cópias Fatura e Pagamento"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Octuplicado"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Original"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "Our Warehouse"
+msgstr "Nosso armazém"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.payments_group
+msgid "Paid on"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "Picking"
+msgstr "Escolhendo"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Pro-Forma #"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Pro-Forma Canceled #"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Purchase Order #"
+msgstr "Nota de Encomenda #"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Purchase Order Canceled #"
+msgstr "Nota de Encomenda Cancelada #"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Quadruplicado"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Quintuplicado"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Quotation #"
+msgstr "Orçamento #"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Quotation Canceled #"
+msgstr "Orçamento Cancelado #"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Reason Cancel:"
+msgstr "Motivo do cancelamento :"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "Recebi: _____________________________"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+msgid "Receipt RG"
+msgstr "Recibo RG"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "Return Picking"
+msgstr "Recolha de Devolução"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Septuplicado"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Sextuplicado"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Shipping Invoice #"
+msgstr "Fatura de Consignação #"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Shipping Invoice Canceled #"
+msgstr "Fatura de Consignação Cancelada #"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "Shipping Picking"
+msgstr "Separação de envio"
+
+#. module: cit_reports_extended
+#: model:ir.model.fields,field_description:cit_reports_extended.field_res_company__default_sidebar_preference
+#: model:ir.model.fields,field_description:cit_reports_extended.field_res_users__sidebar_type
+msgid "Sidebar Type"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model:ir.model.fields.selection,name:cit_reports_extended.selection__res_company__default_sidebar_preference__small
+#: model:ir.model.fields.selection,name:cit_reports_extended.selection__res_users__sidebar_type__small
+msgid "Small"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Tax"
+msgstr "Imposto"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Taxes"
+msgstr "Impostos"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "This Document does not serve as an Invoice."
+msgstr "Este Documento não serve como Fatura"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "This document is not intended as an invoice."
+msgstr "Este documento não serve como fatura ou documento de transporte."
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.account_invoice_form_view_transportation_data
+msgid "Transportation Data"
+msgstr "Dados de Transporte"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Triplicado"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.account_invoice_form_view_transportation_data
+msgid "Unload Data"
+msgstr "Dados de Descarga"
+
+#. module: cit_reports_extended
+#: model:ir.model,name:cit_reports_extended.model_res_users
+msgid "User"
+msgstr "Utilizador"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "VD"
+msgstr ""
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Value"
+msgstr "Valor"
+
+#. module: cit_reports_extended
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_bank_statement_line__vehicle_registration
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_move__vehicle_registration
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_payment__vehicle_registration
+msgid "Vehicle Registration"
+msgstr "Registro do Veículo"
+
+#. module: cit_reports_extended
+#. odoo-python
+#: code:addons/cit_reports_extended/models/account_move.py:0
+#, python-format
+msgid "Vendor Bill"
+msgstr "Fatura de Fornecedor"
+
+#. module: cit_reports_extended
+#. odoo-python
+#: code:addons/cit_reports_extended/models/account_move.py:0
+#, python-format
+msgid "Vendor Bill - %s"
+msgstr "Fatura de Fornecedor - %s"
+
+#. module: cit_reports_extended
+#. odoo-python
+#: code:addons/cit_reports_extended/models/account_move.py:0
+#, python-format
+msgid "Vendor Credit Note"
+msgstr "Nota de Crédito de Fornecedor"
+
+#. module: cit_reports_extended
+#. odoo-python
+#: code:addons/cit_reports_extended/models/account_move.py:0
+#, python-format
+msgid "Vendor Credit Note - %s"
+msgstr "Nota de Crédito de Fornecedor - %s"
+
+#. module: cit_reports_extended
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_bank_statement_line__view_transportation_data
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_move__view_transportation_data
+#: model:ir.model.fields,field_description:cit_reports_extended.field_account_payment__view_transportation_data
+msgid "View Transportation Data"
+msgstr "Ver Informação de Transporte"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "Y/ Warehouse"
+msgstr "S/ Armazém"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "nº"
+msgstr ""
+
+#. module: account
+#: model_terms:ir.ui.view,arch_db:account.report_invoice_document
+msgid "Description"
+msgstr "Descrição"
+
+
+#. module: account
+#: model_terms:ir.ui.view,arch_db:account.report_invoice_document
+msgid "Quantity"
+msgstr "Quantidade"
+
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Product Code"
+msgstr "Código do produto"
+
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Exemption Code"
+msgstr "Código de isenção"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "<span>Disc%</span>"
+msgstr "<span>Desc%</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "<span>Tax%</span>"
+msgstr "<span>Taxa%</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "<span>Date of Expiry:</span>"
+msgstr "<span>Data de Expiração:</span>"
+
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "<span>Date of Issue:</span>"
+msgstr "<span>Data de Emissão:</span>"
+
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.document_tax_totals_opencloud
+msgid "<strong>Description</strong>"
+msgstr "<strong>Descrição</strong>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.document_tax_totals_opencloud
+msgid "<strong>Tax%</strong>"
+msgstr "<strong>Taxa%</strong>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.document_tax_totals_opencloud
+msgid "<strong>Exemption Reason</strong>"
+msgstr "<strong>Motivo de isenção</strong>"
+
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "<span>UnitPrice</span>"
+msgstr "<span>P/Unitário</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "<b>Origin:</b>"
+msgstr "<b>Origem:</b>"
+
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "<span style=\"font-size:0.95em !important;\">Date of Expiry:</span>"
+msgstr "<span style=\"font-size:0.95em !important;\">Data de Expiração:</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "<span style=\"font-size:0.95em !important;\">Date of Issue:</span>"
+msgstr "<span style=\"font-size:0.95em !important;\">Data de Emissão:</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Exemption Code <span style=\"color:red;\">*</span>"
+msgstr "Código de isenção <span style=\"color:red;\">*</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Description"
+msgstr "Descrição"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Tax%"
+msgstr "Taxa%"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_saleorder_document_itc
+msgid "Exemption Reason"
+msgstr "Motivo de Isenção"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+msgid "<span>InvoiceReference</span>"
+msgstr "<span>Referência da Factura</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+msgid "<span>Date of Issue</span>"
+msgstr "<span>Data de Emissão</span"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+msgid "<span>Total Tax</span>"
+msgstr "<span>Total de Imposto</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+msgid "<span>Retention/Captivation</span>"
+msgstr "<span>Retenção/Cativação</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+msgid "<span>Invoice Total</span>"
+msgstr "<span>Total da Factura</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+msgid "<span>Total paid</span>"
+msgstr "<span>Total Pago</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+msgid "<span>Pending Value</span>"
+msgstr "<span>Valor Pendente</span>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+msgid "Vendor"
+msgstr "Fornecedor"
+
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_picking_opc
+msgid "<strong>Scheduled Date:</strong>"
+msgstr "<strong>Data de Agendada:</strong>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Quantity"
+msgstr "Quantidade"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Description"
+msgstr "Descrição"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "<strong class=\"mr16\" style=\"color:red;\">Previous Subtotal</strong>"
+msgstr "<strong class=\"mr16\" style=\"color:red;\">Transportado:</strong>"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "<strong class=\"mr16\" style=\"float:left;color:red;\">Subtotal</strong>"
+msgstr "<strong class=\"mr16\" style=\"float:left;color:red;\">À transportar:</strong>"
+
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Description"
+msgstr "Descrição"
+
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_invoice_document_opc
+msgid "Quantity"
+msgstr "Quantidade"
+
+#. module: cit_reports_extended
+#: model_terms:ir.ui.view,arch_db:cit_reports_extended.report_payment_document_opc
+msgid "Payment Method:"
+msgstr "Método de Pagamento:"
