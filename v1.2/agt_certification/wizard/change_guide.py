@@ -11,24 +11,13 @@ from odoo import models, fields, api, _
 
 class WizardAlterarGuia(models.TransientModel):
     _name = "wizard.alterar.guia"
-    _description = "Wizard para alterar campos na guia depois de validada e cujo estado AT seja cancelado"
+    _description = "Wizard to change fields in the tab after it has been validated and whose AT status is canceled"
 
-    name = fields.Char(string="Veículo: ", size=16, help='Matrícula', copy=False)
-    data_carga = fields.Datetime(string="Data de carga", copy=False)
-    data_descarga = fields.Datetime(string="Data de descarga", copy=False)
+    name = fields.Char(string="Vehicle: ", size=16, help='Matrícula', copy=False)
+    data_carga = fields.Datetime(string="Load date", copy=False)
+    data_descarga = fields.Datetime(string="Discharge date", copy=False)
 
-    
-    def act_cancel(self):
-        """ Fechar wizard
-        """
-        return {'type': 'ir.actions.act_window_close'}
-
-    
     def act_getfile(self):
-        """ Criar duplicado da guia que tem estado AT 'cancelado' e preencher campos
-            Veículo/Matrícula, Data de Carga e Data de Descarga de acordo com os
-            valores preenchidos no wizard
-        """
         if self.env.context.get('active_id'):
             picking = self.env['stock.picking'].browse(self.env.context.get('active_id'))
             number = picking.name
@@ -77,4 +66,7 @@ class WizardAlterarGuia(models.TransientModel):
                     'context': self.env.context,
                 }
 
+        return {'type': 'ir.actions.act_window_close'}
+
+    def act_cancel(self):
         return {'type': 'ir.actions.act_window_close'}

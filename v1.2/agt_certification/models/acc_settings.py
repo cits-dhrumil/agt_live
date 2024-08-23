@@ -11,21 +11,15 @@ from odoo import models, fields
 
 class AccountConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
-    _description = 'Esta classe e criada com o objetivo de criar 2 novos campos nas configuracoes da contabilidade' \
-                   'estes dois campos servem para as contas de acerto de casos decimais, ' \
-                   'tanto de compras como de vendas, serem configuraveis.'
+    _description = 'This class is created with the aim of creating 2 new fields in the accounting settings' \
+                   'these two fields are used to calculate decimal cases,' \
+                   'both purchases and sales are configurable.'
 
     account_adjustments_purchase = fields.Many2one("account.account", related='company_id.account_adjustments_purchase',
-                                                   string="Conta de acerto de casa decimal para compra")
-    account_adjustments_sale = fields.Many2one("account.account", string="Conta de acertos de casa decimal para venda",
+                                                   string="Decimal adjustment account for purchase")
+    account_adjustments_sale = fields.Many2one("account.account", string="Decimal adjustments account for sale",
                                                related='company_id.account_adjustments_sale')
     line_per_page = fields.Integer()
-
-    def get_values(self):
-        res = super(AccountConfigSettings, self).get_values()
-        res.update(
-            line_per_page=int(self.env['ir.config_parameter'].sudo().get_param('agt_certification.line_per_page'), ))
-        return res
 
     def set_values(self):
         super(AccountConfigSettings, self).set_values()
@@ -33,4 +27,8 @@ class AccountConfigSettings(models.TransientModel):
         param = self.env['ir.config_parameter'].sudo()
         param.set_param('agt_certification.line_per_page', lines)
 
-
+    def get_values(self):
+        res = super(AccountConfigSettings, self).get_values()
+        res.update(
+            line_per_page=int(self.env['ir.config_parameter'].sudo().get_param('agt_certification.line_per_page'), ))
+        return res

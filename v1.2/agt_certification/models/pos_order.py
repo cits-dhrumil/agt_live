@@ -27,8 +27,8 @@ class POSOrder(models.Model):
 
     hash = fields.Char(string="Hash", size=256, readonly=True,
                        help="Unique hash of the sale order.", copy=False)
-    hash_control = fields.Char(string="Chave", size=40, copy=False)
-    hash_date = fields.Datetime(string="Data em que o hash foi gerado",
+    hash_control = fields.Char(string="key", size=40, copy=False)
+    hash_date = fields.Datetime(string="Date the hash was generated",
                                 copy=False)
     certificated = fields.Boolean('Certificated', default=False, copy=False,
                                   readonly=True)
@@ -36,56 +36,7 @@ class POSOrder(models.Model):
     qr_code_at = fields.Char(compute='_get_qr_code_generation',
                              string='QR Code AT')
     qr_code_at_img = fields.Binary("QR Code", compute='_compute_qr_code_image')
-    old_name = fields.Char(string="Referência interna", size=64, copy=False)
-
-    def certify(self):
-        '''certify the quotation and then after not editable '''
-        needs_atcud = self.env['ir.config_parameter'].sudo().get_param('needs_atcud')
-        if needs_atcud == 'True':
-            # Todo: needs_atcud field is not defined in configuration part so
-            #  this condition always going false
-            wizard_alert_atcud = self.env['alert.atcud']
-            sequence_id_atcud = self._get_sequence_for_atcud()
-            codigo_validacao_serie = wizard_alert_atcud._get_codigo_validacao_serie(sequence_id_atcud, self.date_order)
-        if not self.certificated:
-            self.env.cr.execute("""
-                SELECT max(date_order)
-                FROM pos_order
-                WHERE hash != ''""")
-            self.env.cr.fetchone()[0]
-        for pos_order in self:
-            datasistema = str(pos_order.write_date or datetime.now())[:19]
-            datadocumento = pos_order.date_order
-            number = pos_order.name
-            totalbruto = pos_order.amount_total
-            # verificar se é o primeiro documento
-            self._cr.execute("select count(*) from pos_order where hash != '' and company_id=" +
-                             str(pos_order.company_id.id))
-            numHash = self._cr.fetchone()[0]
-            # Se não for o primeiro vai buscar o hash anterior
-            antigoHash = False
-            if numHash > 0:
-                self._cr.execute("SELECT pos.hash FROM pos_order pos, (select max(id) from pos_order " +
-                                 "where hash != '' and company_id=" + str(pos_order.company_id.id) +
-                                 ") mso where pos.id = mso.max")
-                antigoHash = self._cr.fetchone()[0]
-            values = creating_hash.hash(
-                self, False, datadocumento,
-                datasistema, number, numHash, antigoHash, totalbruto)
-            self.certificated = True
-            pos_order.write(values)
-
-
-    def _get_sequence_for_atcud(self):
-        '''get sequence '''
-        #Todo This is not calling now because of configurations for
-        # actud is not there
-        for pos in self:
-            sequence_id = self.env['ir.sequence'].sudo().search(
-                [('code', '=', 'pos.order.custom'),
-                 '|', ('company_id', '=', pos.company_id.id),
-                 ('company_id', '=', False)], limit=1)
-            return sequence_id
+    old_name = fields.Char(string="Internal reference", size=64, copy=False)
 
     def _compute_atcud(self):
         '''Compute or find sequence for order based date range or default
@@ -105,6 +56,12 @@ class POSOrder(models.Model):
                     n_sequencial_serie = pos.name.split('/')[1]
                     pos.atcud = _(
                         codigo_validacao_serie) + '-' + n_sequencial_serie
+
+    def _compute_qr_code_image(self):
+        '''get qr code image '''
+        for pos in self:
+            pos.qr_code_at_img = self.env[
+                'alert.atcud']._compute_qr_code_image(pos.qr_code_at)
 
     def _get_qr_code_generation(self):
         '''Generate qr code'''
@@ -175,14 +132,54 @@ class POSOrder(models.Model):
                     quatro_caratecters_hash, n_certificado, outras_infos
                 )
 
-    def _compute_qr_code_image(self):
-        '''get qr code image '''
-        for pos in self:
-            pos.qr_code_at_img = self.env[
-                'alert.atcud']._compute_qr_code_image(pos.qr_code_at)
-
     def _process_saved_order(self,draft):
         '''overright this method for certified the order'''
         draft = super()._process_saved_order(draft)
         self.certify()
         return draft
+
+    def certify(self):
+        '''certify the quotation and then after not editable '''
+        needs_atcud = self.env['ir.config_parameter'].sudo().get_param('needs_atcud')
+        if needs_atcud == 'True':
+            # Todo: needs_atcud field is not defined in configuration part so
+            #  this condition always going false
+            wizard_alert_atcud = self.env['alert.atcud']
+            sequence_id_atcud = self._get_sequence_for_atcud()
+            codigo_validacao_serie = wizard_alert_atcud._get_codigo_validacao_serie(sequence_id_atcud, self.date_order)
+        if not self.certificated:
+            self.env.cr.execute("""
+                SELECT max(date_order)
+                FROM pos_order
+                WHERE hash != ''""")
+            self.env.cr.fetchone()[0]
+        for pos_order in self:
+            datasistema = str(pos_order.write_date or datetime.now())[:19]
+            datadocumento = pos_order.date_order
+            number = pos_order.name
+            totalbruto = pos_order.amount_total
+            self._cr.execute("select count(*) from pos_order where hash != '' and company_id=" +
+                             str(pos_order.company_id.id))
+            numHash = self._cr.fetchone()[0]
+            antigoHash = False
+            if numHash > 0:
+                self._cr.execute("SELECT pos.hash FROM pos_order pos, (select max(id) from pos_order " +
+                                 "where hash != '' and company_id=" + str(pos_order.company_id.id) +
+                                 ") mso where pos.id = mso.max")
+                antigoHash = self._cr.fetchone()[0]
+            values = creating_hash.hash(
+                self, False, datadocumento,
+                datasistema, number, numHash, antigoHash, totalbruto)
+            self.certificated = True
+            pos_order.write(values)
+
+    def _get_sequence_for_atcud(self):
+        '''get sequence '''
+        #Todo This is not calling now because of configurations for
+        # actud is not there
+        for pos in self:
+            sequence_id = self.env['ir.sequence'].sudo().search(
+                [('code', '=', 'pos.order.custom'),
+                 '|', ('company_id', '=', pos.company_id.id),
+                 ('company_id', '=', False)], limit=1)
+            return sequence_id

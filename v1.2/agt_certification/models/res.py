@@ -19,9 +19,12 @@ import requests
 _logger = logging.getLogger(__name__)
 
 
-# tabela de parceiros - contactos
 class ResPartner(models.Model):
     _inherit = "res.partner"
+
+    @api.model
+    def _default_vat(self):
+        return '999999990'
 
     @api.depends('vat', 'company_id')
     def _compute_same_vat_partner_id_opc(self):
@@ -43,50 +46,7 @@ class ResPartner(models.Model):
             if partner.vat == '999999990' or partner.vat == '999999999':
                 partner.same_vat_partner_id = False
 
-    # @api.constrains('vat')
-    # def check_vat(self):
-    #     if not self.env['res.users'].browse(self.env.uid).company_id.validar_nif:
-    #         return True
-    #     for partner in self:
-    #         # validar NIF em PT
-    #         if not partner.country_id or partner.country_id.code == 'PT':
-    #             if partner.parent_id and partner.vat == partner.parent_id.vat and partner.vat != '999999990':
-    #                 partner.vat = '999999990'
-    #             if self.env['res.users'].browse(self.env.uid).company_id.validar_nif:
-    #                 pais = False
-    #                 if partner.country_id and partner.country_id.id:
-    #                     pais = partner.country_id.code
-    #
-    #                 if (not pais or pais == 'PT') and not partner.parent_id:
-    #                     if partner.vat != '999999990':
-    #                         nif = partner.vat
-    #                         # 1ª regra
-    #
-    #                         if nif and nif[:2] == 'PT':
-    #                             nif = nif.replace('PT', '')
-    #                         # if not nif or len(nif) != 9:
-    #                         #     raise ValidationError(_('O nif tem de possuir 9 digitos.'))
-    #                         # 2ª regra
-    #                         if nif[0] == "4":
-    #                             raise ValidationError(_('O nif não pode iniciar com 4.'))
-    #             else:
-    #                 break
-    #         if partner.country_id and partner.country_id.code != 'PT':
-    #             check_vat_validation = super(ResPartner, self).check_vat()
-    #
-    #             return check_vat_validation
 
-    @api.model
-    def _default_vat(self):
-        # try:
-        #     if self.env.company and self.env.company.pais_certificacao and self.env.company.pais_certificacao.code == 'AO':
-        #         return '999999999'
-        #     else:
-        #         return '999999990'
-        # except:
-        return '999999990'
-
-    # metodo de computa o campo que diz se o nif esta em duplicado ou nao
     @api.depends('vat')
     def _compute_nif_duplicado(self):
         for partner in self:
@@ -101,86 +61,86 @@ class ResPartner(models.Model):
 
     same_vat_partner_id = fields.Many2one('res.partner', string='Partner with same Tax ID',
                                           compute='_compute_same_vat_partner_id_opc', store=False)
-    cash_vat_scheme_indicator = fields.Boolean(string="Iva de Caixa",
-                                               help="Assinale se houver adesão ao regime de iva de caixa.",
+    cash_vat_scheme_indicator = fields.Boolean(string="Cash VAT",
                                                default=False, copy=False)
-    nif_duplicado = fields.Boolean(compute='_compute_nif_duplicado', string="Proibir NIF's Duplicados",
-                                   help="Se levar visto, existe um outro parceiro com esse nif.",
+    nif_duplicado = fields.Boolean(compute='_compute_nif_duplicado', string="Prohibit Duplicate NIF's",
+                                   help="If you have a visa, there is another partner with that number.",
                                    default=False, copy=False)
-    vat = fields.Char(string="Nº Contribuinte", size=20,
-                      help="Número de Identicação Fiscal",
+    vat = fields.Char(string="Taxpayer No.", size=20,
+                      help="Tax Identification Number",
                       copy=False,required=False)
-    # vat = fields.Char(string="Nº Contribuinte", size=20,
-    #                   help="Número de Identicação Fiscal",
-    #                   default=_default_vat, copy=False, required=True)
-    reg_com = fields.Char(string="Capital Social", size=32, help="5.000", copy=False)
-    conservatoria = fields.Char(string="Conservatória", size=64, help="Conservatória do registo comercial", copy=False)
-    nif_representante = fields.Char(string="NIF do representante", size=20, copy=False)
+    reg_com = fields.Char(string="Social Capital", size=32, help="5.000", copy=False)
+    conservatoria = fields.Char(string="Conservatory", size=64, help="Commercial registry office", copy=False)
+    nif_representante = fields.Char(string="Representative's NIF", size=20, copy=False)
     nif_toc = fields.Char(string="NIF do TOC", size=20, copy=False)
-    fin_code = fields.Char(string="Código do serviço de finanças", size=4, copy=False)
-    self_bill_sales = fields.Boolean(string="Auto Faturação para Vendas", copy=False,
-                                     help="Assinale se existe acordo de auto-facturação para as vendas a este parceiro")
-    self_bill_purch = fields.Boolean(string="Auto Faturação para Compras", copy=False,
-                                     help="Assinale se existe acordo de auto-facturação para as compras ao parceiro")
+    fin_code = fields.Char(string="Finance service code", size=4, copy=False)
+    self_bill_sales = fields.Boolean(string="Auto Billing for Sales", copy=False,
+                                     help="ndicate whether there is a self-billing agreement for sales to this partner")
+    self_bill_purch = fields.Boolean(string="Auto Invoicing for Purchases", copy=False,
+                                     help="Indicate whether there is a self-invoicing agreement for purchases from the partner")
     tipo_cambio = fields.Selection([
-        ('Fixo', 'Fixo'),
-        ('Variavel', 'Variável')], string='Tipo de Cambio', readonly=False, copy=False, default='Variavel',
-        help='Se for fixo as diferenças cambiais são lançadas na conta do cliente, '
-             'se for variável as diferenças são lançadas na conta 7861 ou 692.')
-
-    @api.constrains('ref', 'company_id')
-    def _check_ref(self):
-        if self.env.cr.dbname != 'braver_v14':
-            for partner in self:
-                partner_code_count = self.sudo().search_count([('id', '!=', partner.id),
-                                                               ('ref', '=', partner.ref),
-                                                               '|', ('company_id', '=', partner.company_id.id),
-                                                               ('company_id', '=', False)])
-                if partner_code_count > 0:
-                    raise ValidationError(_("Partner ref must be unique, per company!"))
+        ('Fixo', 'Fixed'),
+        ('Variavel', 'Variable')], string='Exchange Type', readonly=False, copy=False, default='Variavel')
 
     @api.model
     def default_get(self, fields):
-        """ Definir, por defeito, os valores dos campos:
-            opt_out, notify_email, ref, is_company e company_type
-        """
         defaults = super(ResPartner, self).default_get(fields)
         defaults.update({'ref': '/'})
         return defaults
 
-    def copy(self, default=None, done_list=None, local=False):
-        """ Herança do método copy da tabela res.partner
-            ao duplicar um parceiro, preencher o campo vat com
-            '999999990' e o campo ref com '/'
-        """
-        default = {} if default is None else default.copy()
-        default.update({'vat': '999999990', 'ref': '/'})
-        return super(ResPartner, self).copy(default)
-
-    @api.onchange('tipo_cambio')
-    def _onchange_tipo_cambio(self):
-        if self.tipo_cambio == 'Fixo':
-            self.tipo_cambio = 'Variavel'
-            return {
-                'warning': {'title': _('Atenção'),
-                            'message': _('Esta funcionalidade ainda não está disponível!'), }
-            }
-
-    # validacoes ao apagar cliente
-
-    def unlink(self):
-        for partner in self:
-            self.env.cr.execute("select id from stock_picking where partner_id=" + str(partner.id))
-            picking_id = self.env.cr.fetchone()
-            if picking_id and picking_id[0]:
-                raise ValidationError(_('O parceiro entra em guias pelo que apenas o pode desactivar.'))
-        return super(ResPartner, self).unlink()
-
     @api.model
-    def _commercial_fields(self):
-        remove_vat = super(ResPartner, self)._commercial_fields()
-        remove_vat.remove('vat')
-        return remove_vat
+    def create(self, vals):
+        if 'parent_id' in vals and vals['parent_id']:
+            vals['is_company'] = False
+        if vals.get('ref', '/') == '/' or vals.get('ref', '') == '':
+            vals['ref'] = self.env['ir.sequence'].get('parceiros.ref.seq.itc') or '/'
+
+        if 'vat' in vals:
+            if str(vals['vat']) == '':
+                vals['vat'] = '999999990'
+
+            if 'parent_id' in vals and vals['parent_id']:
+                self._cr.execute(
+                    "select customer_rank,supplier_rank from res_partner where id=" + str(
+                        vals['parent_id']))
+                parent_partner_id = self._cr.fetchone()
+                if parent_partner_id[0] == 1:
+                    vals['customer_rank'] = 1
+                else:
+                    vals['customer_rank'] = 0
+                if parent_partner_id[1] == 1:
+                    vals['supplier_rank'] = 1
+                else:
+                    vals['supplier_rank'] = 0
+
+        partner = super(ResPartner, self).create(vals)
+        if 'vat' in vals:
+            partner.check_vat()
+
+        self._cr.execute("""
+                SELECT rc.validar_nif_duplicados
+                FROM res_partner rp, res_company rc
+                WHERE rp.company_id=rc.id and rp.id=%s""", (partner.id,))
+        validar_nif_duplicados = self._cr.fetchone()
+        if partner.vat != '999999990' and validar_nif_duplicados:
+            if partner.company_id and partner.company_id.id:
+                self._cr.execute("""
+                        SELECT id
+                        FROM res_partner
+                        WHERE vat = %s AND company_id = %s AND id != %s """,
+                                 (str(partner.vat), str(partner.company_id.id),
+                                  str(partner.id)))
+            else:
+                self._cr.execute("""
+                        SELECT id
+                        FROM res_partner
+                        WHERE vat = %s AND and id != %s """,
+                                 (str(partner.vat), str(partner.id)))
+            parent_partner_id = self._cr.fetchone()
+            if parent_partner_id and parent_partner_id[0]:
+                if validar_nif_duplicados[0]:
+                    raise ValidationError(_("Ja existe um cliente com esse NIF."))
+        return partner
 
     def write(self, vals):
         Partner = self.env['res.partner']
@@ -220,64 +180,46 @@ class ResPartner(models.Model):
                         _('Não pode alterar o parceiro coemrcial deste parceiro pois o mesmo porque possui faturas/notas de crédito.'))
         return result
 
+    def copy(self, default=None, done_list=None, local=False):
+        default = {} if default is None else default.copy()
+        default.update({'vat': '999999990', 'ref': '/'})
+        return super(ResPartner, self).copy(default)
+
+    def unlink(self):
+        for partner in self:
+            self.env.cr.execute(
+                "select id from stock_picking where partner_id=" + str(partner.id))
+            picking_id = self.env.cr.fetchone()
+            if picking_id and picking_id[0]:
+                raise ValidationError(
+                    _('O parceiro entra em guias pelo que apenas o pode desactivar.'))
+        return super(ResPartner, self).unlink()
+
+    @api.constrains('ref', 'company_id')
+    def _check_ref(self):
+        if self.env.cr.dbname != 'braver_v14':
+            for partner in self:
+                partner_code_count = self.sudo().search_count([('id', '!=', partner.id),
+                                                               ('ref', '=', partner.ref),
+                                                               '|', ('company_id', '=', partner.company_id.id),
+                                                               ('company_id', '=', False)])
+                if partner_code_count > 0:
+                    raise ValidationError(_("Partner ref must be unique, per company!"))
+
+    @api.onchange('tipo_cambio')
+    def _onchange_tipo_cambio(self):
+        if self.tipo_cambio == 'Fixo':
+            self.tipo_cambio = 'Variavel'
+            return {
+                'warning': {'title': _('Atenção'),
+                            'message': _('Esta funcionalidade ainda não está disponível!'), }
+            }
+
     @api.model
-    def create(self, vals):
-        """ Herança do método create da tabela res.partner
-            se o parceiro tiver um parent, ou seja, um parceiro pai
-            o valor do campo is_company é False
-            se o parceiro tiver o campo ref preenchido com '/', preencher
-            a sequência seguinte definida para os parceiros
-        """
-        if 'parent_id' in vals and vals['parent_id']:
-            vals['is_company'] = False
-        if vals.get('ref', '/') == '/' or vals.get('ref', '') == '':
-            vals['ref'] = self.env['ir.sequence'].get('parceiros.ref.seq.itc') or '/'
-
-        if 'vat' in vals:
-            if str(vals['vat']) == '':
-                vals['vat'] = '999999990'
-
-            # contactos
-            if 'parent_id' in vals and vals['parent_id']:
-                self._cr.execute(
-                    "select customer_rank,supplier_rank from res_partner where id=" + str(vals['parent_id']))
-                parent_partner_id = self._cr.fetchone()
-                if parent_partner_id[0] == 1:
-                    vals['customer_rank'] = 1
-                else:
-                    vals['customer_rank'] = 0
-                if parent_partner_id[1] == 1:
-                    vals['supplier_rank'] = 1
-                else:
-                    vals['supplier_rank'] = 0
-            # fim contactos
-
-        partner = super(ResPartner, self).create(vals)
-        if 'vat' in vals:
-            partner.check_vat()
-
-        self._cr.execute("""
-            SELECT rc.validar_nif_duplicados
-            FROM res_partner rp, res_company rc
-            WHERE rp.company_id=rc.id and rp.id=%s""", (partner.id,))
-        validar_nif_duplicados = self._cr.fetchone()
-        if partner.vat != '999999990' and validar_nif_duplicados:
-            if partner.company_id and partner.company_id.id:
-                self._cr.execute("""
-                    SELECT id
-                    FROM res_partner
-                    WHERE vat = %s AND company_id = %s AND id != %s """,
-                                 (str(partner.vat), str(partner.company_id.id), str(partner.id)))
-            else:
-                self._cr.execute("""
-                    SELECT id
-                    FROM res_partner
-                    WHERE vat = %s AND and id != %s """, (str(partner.vat), str(partner.id)))
-            parent_partner_id = self._cr.fetchone()
-            if parent_partner_id and parent_partner_id[0]:
-                if validar_nif_duplicados[0]:
-                    raise ValidationError(_("Ja existe um cliente com esse NIF."))
-        return partner
+    def _commercial_fields(self):
+        remove_vat = super(ResPartner, self)._commercial_fields()
+        remove_vat.remove('vat')
+        return remove_vat
 
     def nif_process(self, type):
         message = ''
@@ -364,11 +306,6 @@ class ResPartner(models.Model):
             else:
                 self.check_vat()
         return {}
-
-    def verificar_nif(self):
-        values = self.nif_process('object')
-        if values:
-            self.write(values)
 
     @api.onchange('vat')
     def onchange_nif(self):
@@ -457,8 +394,11 @@ class ResPartner(models.Model):
                 except:
                     e = 1
 
+    def verificar_nif(self):
+        values = self.nif_process('object')
+        if values:
+            self.write(values)
 
-# tabela da empresa da base de dados - configuracoes - utilizadores - empresas
 class ResCompany(models.Model):
     _inherit = "res.company"
 
@@ -494,9 +434,22 @@ class ResCompany(models.Model):
     reg_com = fields.Char(related="partner_id.reg_com", string='Capital Social', help="5.000", size=32)
     local_installation = fields.Boolean('Instalação Local', default=False)
 
+    def write(self, vals):
+        for company in self:
+            if 'vat' in vals:
+                if not company.company_registry:
+                    vals['company_registry'] = vals['vat']
+                if not company.conservatoria:
+                    company.partner_id.conservatoria = vals['vat']
+                if not company.reg_com:
+                    company.partner_id.reg_com = '5.000'
+        return super(ResCompany, self).write(vals)
+
+    def copy(self, default=None):
+        raise ValidationError(_("Não é possivel utilizar a opção duplicar nas empresas, por favor use o botão criar."))
+
     @api.onchange('reg_com', 'vat')
     def _onchange_comapny_details(self):
-        # Retirar carateres que nao sejam alfanumericos
         for company in self:
             company_details = ''
             if company.name:
@@ -527,26 +480,9 @@ class ResCompany(models.Model):
             company.company_details = company_details
             company.report_footer = report_footer
 
-    def write(self, vals):
-        for company in self:
-            if 'vat' in vals:
-                if not company.company_registry:
-                    vals['company_registry'] = vals['vat']
-                if not company.conservatoria:
-                    company.partner_id.conservatoria = vals['vat']
-                if not company.reg_com:
-                    company.partner_id.reg_com = '5.000'
-        return super(ResCompany, self).write(vals)
-
-    def copy(self, default=None):
-        raise ValidationError(_("Não é possivel utilizar a opção duplicar nas empresas, por favor use o botão criar."))
-
-
-# tabela utilizadores - Configuracoes - Utilizadores - Utilizadores
 class ResUsers(models.Model):
     _inherit = "res.users"
 
-    # metodo de login no sistema
     @classmethod
     def authenticate(self, db, login, password, user_agent_env):
         user_authenticate_id = super(ResUsers, self).authenticate(db, login, password, user_agent_env)
@@ -567,7 +503,6 @@ class ResUsers(models.Model):
 
         if local:
             try:
-                # todo: mudar variaveis hardcoded para ir.parameters - fazer na nova versao
                 sock_common_NEW = xmlrpclib.ServerProxy('http://51.255.64.14:8069/xmlrpc/common')
                 uidNEW = sock_common_NEW.login('opencloud', 'UserWebService', 'gdjtr87RTdk45')
                 sockNEW = xmlrpclib.ServerProxy('http://51.255.64.14:8069/xmlrpc/object')

@@ -21,15 +21,14 @@ import re
 
 _logger = logging.getLogger(__name__)
 
-# VALORES FIXO do cabecalho relativos ao OpenERP
 productCompanyTaxID = '8765811955'
 productID = 'ODOO/MUNDO DA CASA -MDC COMERCIO GERAL(SU),LDA'
 productVersion = '17'
 headerComment = 'Software created by Odoo and Customise by CaretIT'
 softCertNr = '118/AGT/2024'
 
-tipos_saft = [('C', 'Contabilidade'),  # ctb na v.1
-              ('F', 'Facturação'),  # fact na v.1
+tipos_saft = [('C', 'Contabilidade'),
+              ('F', 'Facturação'),
               ('I', 'Integrado - Contabilidade e Facturação')]
 
 
@@ -48,7 +47,6 @@ class WizardSaft(models.Model):
 
     @api.model
     def _default_company(self):
-        # Devolve a empresa do utilizador, ou a primeira encontrada
         if self.env.user.company_id:
             return self.env.user.company_id.id
         return self.env['res.company'].search([('parent_id', '=', False)], limit=1)
@@ -68,40 +66,33 @@ class WizardSaft(models.Model):
         return last_month
 
     name = fields.Char(string="Filename", size=254, readonly=True, default="saftpt.xml", copy=False)
-    info = fields.Text(string="Informação", copy=False)
-    comp = fields.Many2one('res.company', string="Companhia", required=True, default=_default_company, copy=False)
-    tipo = fields.Selection(tipos_saft, string="Tipo ficheiro", required=True, default='F', copy=False)
+    info = fields.Text(string="Information", copy=False)
+    comp = fields.Many2one('res.company', string="Company", required=True, default=_default_company, copy=False)
+    tipo = fields.Selection(tipos_saft, string="File type", required=True, default='F', copy=False)
     filedata = fields.Binary(string="File", readonly=True, copy=False)
-    state = fields.Selection([('choose', 'choose'), ('get', 'get')], string="Estado", default='choose', copy=False)
-    versao = fields.Selection([('1.03_01', '1.03_01'), ('1.04_01', '1.04_01')], string="Versão", required=True,
+    state = fields.Selection([('choose', 'choose'), ('get', 'get')], string="State", default='choose', copy=False)
+    versao = fields.Selection([('1.03_01', '1.03_01'), ('1.04_01', '1.04_01')], string="Version", required=True,
                               default="1.04_01", copy=False)
-    date_inicio = fields.Date('Data de Início', default=get_date_inicio, copy=False)
-    date_fim = fields.Date('Data do Fim', default=get_date_fim, copy=False)
+    date_inicio = fields.Date('Start Date', default=get_date_inicio, copy=False)
+    date_fim = fields.Date('End Date', default=get_date_fim, copy=False)
 
     @api.model
     def saft_aviso(self):
         warning_day = self.env['ir.config_parameter'].search([('key', '=', 'dia.limite.de.envio.de.saft')]).value
-        # verificar se o dia do aviso é hoje
         if warning_day == str(datetime.datetime.now().day):
 
             first_day_last_month = datetime.datetime.now() - dateutil.relativedelta.relativedelta(months=1)
             last_day_last_month = calendar.monthrange(first_day_last_month.year, first_day_last_month.month)[1]
-            # formar a data do primeiro dia do mes anterior
             first_day_last_month = str(first_day_last_month)[0:8] + "01"
-            # formar a data do utlimo dia do mes anterior
             last_day_last_month = str(first_day_last_month)[0:8] + str(last_day_last_month)
-            # verificar se já exportou o saft para o mês anterior
             check_history = self.env['hist.saft'].search([('data_inicio', '=', first_day_last_month),
                                                           ('data_fim', '=', last_day_last_month)])
             if not check_history:
-                # se ainda não exportou, verificar se o mês anterior tem faturas
                 check_invoices = self.env['account.move'].search([('date', '>=', first_day_last_month),
                                                                      ('date', '<=', last_day_last_month)])
                 if check_invoices:
-                    # managers de contabilidade
                     for user in self.env['res.users'].sudo().search([]):
                         if user.has_group('account.group_account_manager'):
-                            # enviar e-mail para os manager de contabilidade
                             notification_template = self.env['ir.model.data'].sudo().check_object_reference (
                                 'agt_certification', 'saft_aviso25')
 
@@ -128,17 +119,6 @@ class WizardSaft(models.Model):
              ], limit=1)
         if not address:
             address = partner
-
-        # obtem os campos (para o id acima) de addressStruture
-        # print address
-        # TODO: criar aqui o XML do endereco
-        """Funcao para gerar campo Address -   Elementos e ordem:
-            BuildingNumber
-            StreetName
-          * AddressDetail
-          * City
-          * PostalCode
-          * Country    """
         street = address.street and address.street[:60] or 'Desconhecido'
         city = address.city or 'Desconhecido'
         postal_code = address.zip and address.zip.replace(" ", "")[:8] or '0000-000'
@@ -193,7 +173,6 @@ class WizardSaft(models.Model):
             raise ValidationError(_('Apenas pode exportar a versão 1.04_01 para datas iguais ou superiores a '
                                     '2017-07-01.'))
 
-        # cria o historico
         self.env['hist.saft'].create({
             'nif': self.comp.partner_id.vat or '',
             'tipo': 'export',
@@ -201,22 +180,18 @@ class WizardSaft(models.Model):
             'data_fim': self.date_fim,
             'data_criacao': datetime.datetime.now(),
         })
-        # fim de gravar no historico
 
         _logger.info("saft :", ' A exportar o ficheiro xml SAFT ****')
 
-        # Namespaces declaration
         xmlns = "urn:OECD:StandardAuditFile-Tax:PT_" + str(self.versao)
         attrib = {'xmlns': xmlns}
 
         root = et.Element("AuditFile", attrib=attrib)
         header = et.SubElement(root, 'Header', xmlns=xmlns)
 
-        # master
         master = self._get_masters()
         root.append(master)
 
-        # entries : exclui na facturação
         if self.tipo in ('C', 'I'):
             entries = self._get_entries()
             root.append(entries)
@@ -244,7 +219,6 @@ class WizardSaft(models.Model):
 
         header.append(comp_address)
 
-        # gera o header propriamente
         tags = (('FiscalYear', str(self.date_inicio)[:4]),
                 ('StartDate', str(self.date_inicio)),
                 ('EndDate', str(self.date_fim)),
@@ -278,23 +252,11 @@ class WizardSaft(models.Model):
 
         nome_file = 'SaftAGT-' + nome_file_2 + '-' + nome_file_3 + nome_file_4 + '.xml'
 
-        # Os pagamento só vão para o saft se o mesmo for de Contabilidade ou se a empresa for de iva de caixa
         if self.tipo != 'C':
             docs = self._write_source_documents(self.date_inicio, self.date_fim, self.versao, self.comp.id)
             if docs:
                 root.append(docs)
 
-        # xml_bytes = et.tostring(root, encoding="windows-1252")
-        # xml_txt = xml_bytes.decode('windows-1252')
-        # dom = minidom.parseString(xml_txt)
-        # pretty_xml = dom.toprettyxml(indent="  ")
-        # xml_txt = pretty_xml.encode('windows-1252')
-        # out = base64.encodebytes(xml_txt)
-        #
-        # # saft_file = open('/bin/Safts/saft_' + self.env.cr.dbname + '.xml', 'w+')
-        # saft_file = open('/home/odoo/src/user/saft_agt_live_v17.xml', 'w+')
-        # saft_file.write(xml_txt.decode('windows-1252'))
-        # saft_file.close()
         xml_bytes = et.tostring(root, encoding="utf-8", xml_declaration=True)
         xml_txt = xml_bytes.decode('utf-8')
         dom = minidom.parseString(xml_txt)
@@ -325,9 +287,6 @@ class WizardSaft(models.Model):
         xmlns = "urn:OECD:StandardAuditFile-Tax:AO_01_01"
         master = et.Element('MasterFiles', xmlns=xmlns)
         master.tail = '\n'
-        # 2.1 GeneralLedger
-        # obtem lista de contas com movimentos, com saldos 99de abertura
-        # precisa obter contas-mãe para cada cta de movimento
         if self.tipo in ('C', 'I'):
             self.env.cr.execute("""
                 SELECT DISTINCT ac.id, ac.code, ac.name, COALESCE(debito, 0.0), COALESCE(credito, 0)
@@ -351,7 +310,6 @@ class WizardSaft(models.Model):
 
             if self.versao != '1.03_01':
                 gl = et.SubElement(master, 'GeneralLedgerAccounts')
-                # get tipo de Empresa
                 taxonomia = self.env['taxonomia.periodo'].search([('company_id', '=', self.comp.id),
                                                                   ('start_date', '<=', self.date_inicio),
                                                                   ('end_date', '>=', self.date_fim)], limit=1)
@@ -365,7 +323,6 @@ class WizardSaft(models.Model):
                     gl = et.SubElement(master, 'GeneralLedger')
                     elemento = gl
                 else:
-                    # este gl ven do If anterior ao For
                     glacc = et.SubElement(gl, 'Account')
                     glacc.tail = '\n'
                     elemento = glacc
@@ -414,7 +371,6 @@ class WizardSaft(models.Model):
         _logger.info("saft :", ' A exportar Fornecedores')
         self._write_partners(master, partner_role='Supplier')
 
-        # 2.4 Product   -   Não entra no tipo 'C'
         if self.tipo != 'C':
             self._write_products(master)
 
@@ -427,19 +383,6 @@ class WizardSaft(models.Model):
 
     
     def _write_partners(self, master, partner_role='Customer'):
-        """ Exporta os elementos 2.2 Customer e 2.3 Supplier
-         1 CustomerID (Supplier)      * partner.id | partner.ref
-         2 AccountID                  * ler em properties ???
-         3 CustomerTaxID (Supplier)   * partner.vat
-         4 CompanyName                * partner.name
-         5 Contact       (Opcional)    [address.name (default)]
-         6 BillingAddress             * address[invoice|default]
-         7 ShipToAddress  (From)        address[delivery]
-         8 Telephone                    address[default].phone | mobile
-         9 Fax                          address[default].fax
-        10 Email                        address[default].email
-        11 Website                      partner.website
-        12 SelfBillingIndicator """
         parceiros_contabilidade = []
         parceiros_sales = []
         parceiros_faturas = []
@@ -535,15 +478,11 @@ class WizardSaft(models.Model):
             if partner and not partner.name:
                 raise ValidationError(_('O nome não está definido no parceiro com id %s.') % _(partner.id, ))
             et.SubElement(partner_element, 'CompanyName').text = partner.name[0:60]
-            # .5 Contact   - Opcional
-            # .6  BillingAddress
             billing_address, phone_fax_mail = self.get_address('BillingAddress', partner)
             partner_element.append(billing_address)
 
-            # 8-9-10  elementos facultativos no OpenERP constam do endereço, no saft estão fora.
             for element in phone_fax_mail:
                 partner_element.append(element)
-            # .11 Website
             if partner.website:
                 et.SubElement(partner_element, 'Website').text = partner.website[:60]
             et.SubElement(partner_element, 'SelfBillingIndicator').text = self_bill
@@ -554,7 +493,6 @@ class WizardSaft(models.Model):
     def _write_products(self, master):
         _logger.info("saft :", ' A exportar tabela de produtos')
 
-        # get_faturas
         list_produtos = []
         list_faturas = self.env['account.move'].search([('date', '>=', self.date_inicio),
                                                            ('date', '<=', self.date_fim)])
@@ -641,14 +579,12 @@ class WizardSaft(models.Model):
         for move_line in move_lines:
             partner = move_line.partner_id and move_line.partner_id.id or False
             line_el = et.SubElement(transaction_el, linha)
-            # 3.4.3.11.1  RecordID  - usa o id interno da tabela account_line
             et.SubElement(line_el, 'RecordID').text = str(move_line.id)
             et.SubElement(line_el, 'AccountID').text = move_line.account_id.code
             et.SubElement(line_el, 'SystemEntryDate').text = date_format(move_line.write_date or move_line.create_date,
                                                                          'DateTimeType')
             et.SubElement(line_el, 'Description').text = move_line.name[:20]
 
-            # versao 1.04_01 do Saft, movimentos de credito e debito estao separados
             if tipo == 'debit':
                 et.SubElement(line_el, 'DebitAmount').text = str(move_line.debit)
                 total_debit += move_line.debit
@@ -658,7 +594,6 @@ class WizardSaft(models.Model):
                 total_credit += move_line.credit
                 result = total_credit
 
-            # versao 1.03_01 do Saft, movimentos de credito e debito estao em conjunto
             if tipo == 'debit_credit':
                 if move_line.credit == 0:
                     et.SubElement(line_el, 'DebitAmount').text = str(move_line.debit)
@@ -697,7 +632,6 @@ class WizardSaft(models.Model):
         total_cd = 0
         total_db = 0
 
-        # obtem diarios excepto diario de abertura
         if not self.comp.open_journal:
             raise ValidationError(_('Falta definir o diario de abertura na empresa.'))
 
@@ -709,7 +643,6 @@ class WizardSaft(models.Model):
             et.SubElement(ejournal, 'JournalID').text = journal.code.strip()
             et.SubElement(ejournal, 'Description').text = journal.name
 
-            # transaccoes do diario e exercicio
             self.env.cr.execute("""
                 SELECT m.id, m.name, m.date, COALESCE(uc.login, uw.login), m.ref, COALESCE(m.write_date, m.create_date)
                 FROM account_move m
@@ -735,20 +668,15 @@ class WizardSaft(models.Model):
                     et.SubElement(trans_el, 'SourceID').text = user[:30]
                     et.SubElement(trans_el, 'Description').text = (_(trans_id) + _(' ') + _(desc))[:20]
 
-                    # 3.4.3.6 DocArchivalNumber
                     et.SubElement(trans_el, 'DocArchivalNumber').text = str(move_id)[:20]
                     et.SubElement(trans_el, 'TransactionType').text = journal.transaction_type
 
-                    # 3.4.3.8 GLPostingDate data no formata AAAA-MM-DD
                     if self.versao not in ['1.03_01', '1.02_01']:
                         et.SubElement(trans_el, 'GLPostingDate').text = date_format(post_date, 'DateType')
 
-                    # 3.4.3.8 versão 1.03_01 GLPostingDate data no formata AAAA-MM-DD Thh:mm:ss
                     else:
                         et.SubElement(trans_el, 'GLPostingDate').text = date_format(post_date, 'DateTimeType')
 
-                    # 3.4.3.9|10  CustomerID|SupllierID  se diario é de vendas  - clientes ; se compras : fornecedores
-                    # usa o id interno para referenciar parceiros  ????
                     partner_el = False
                     if journal.type == 'sale':
                         partner_el = et.SubElement(trans_el, 'CustomerID')
@@ -756,7 +684,6 @@ class WizardSaft(models.Model):
                         partner_el = et.SubElement(trans_el, 'SupplierID')
 
                     if self.versao in ['1.03_01']:
-                        # 3.4.3.11 versão 1.03_01 Line  Adiciona linhas dos movimentos
                         total_db, total_cd = self._get_move_lines_elements(trans_el, 'Line', journal.type, trans_el,
                                                                            partner_el, total_debit, total_credit,
                                                                            'debit_credit',
@@ -765,12 +692,10 @@ class WizardSaft(models.Model):
                     else:
                         trans_el_lines = et.SubElement(trans_el, 'Lines')
 
-                        # 3.4.3.11 Line   Adiciona linhas dos movimentos debit
                         total_db = self._get_move_lines_elements(trans_el_lines, 'DebitLine', journal.type, trans_el,
                                                                  partner_el, total_debit, total_credit, 'debit',
                                                                  [('debit', '>', 0)], move_id)
 
-                        # 3.4.3.11 Line   Adiciona linhas dos movimentos credit
                         total_cd = self._get_move_lines_elements(trans_el_lines, 'CreditLine', journal.type, trans_el,
                                                                  partner_el, total_credit, total_credit, 'credit',
                                                                  [('credit', '>', 0)], move_id)
@@ -786,8 +711,6 @@ class WizardSaft(models.Model):
 
     
     def _write_invoice(self, invoice, eparent, versao):
-        # elemento 4.1.4 Invoice
-        # 4.1.4.1
         if invoice.journal_id.saft_inv_type and invoice.internal_number:
             if invoice.move_type == 'out_refund':
                 prefixo_numero = 'NC'
@@ -800,7 +723,6 @@ class WizardSaft(models.Model):
 
         if self.versao not in ['1.03_01']:
             et.SubElement(eparent, u"ATCUD").text = invoice.atcud or '0'
-        # 4.1.4.2 - InvoiceStatus
         if invoice.state == 'cancel':
             status_code = 'A'
         elif invoice.journal_id.self_billing:
@@ -827,9 +749,7 @@ class WizardSaft(models.Model):
                 et.SubElement(document_status, u"SourceBilling").text = 'I'
             else:
                 et.SubElement(document_status, u"SourceBilling").text = 'P'
-        # fim DocumentStatus
 
-        # 4.1.4.3 - Hash
         et.SubElement(eparent, u"Hash").text = invoice.hash
         # 4.1.4.4 - HasControl
         et.SubElement(eparent, u"HashControl").text = str(invoice.hash_control)
@@ -868,7 +788,6 @@ class WizardSaft(models.Model):
                                                                           invoice.system_entry_date, 'DateTimeType')
         else:
             et.SubElement(eparent, u"SystemEntryDate").text = '0000-00-00'
-        # 4.1.4.10 TransactioID - apenas no caso de ficheiro integrado
         if self.tipo == 'I':
             eTransactionID = et.SubElement(eparent, "TransactionID")
             eTransactionID.text = self.transactionID
@@ -987,7 +906,6 @@ class WizardSaft(models.Model):
                         else:
                             invoice = False
                             if inv.id:
-                                # caso a linha do pagamento nao tenha uma fatura atribuida
                                 move_name = inv.ref or inv.name
                                 originating_on = _(inv.journal_id.saft_inv_type) + ' ' + \
                                                  _(move_name)
@@ -995,7 +913,6 @@ class WizardSaft(models.Model):
                                 description = ' '
                                 debit_credit = 'CreditAmount'
                             else:
-                                # caso a linha do pagamento nao tenha movimento atribuido
                                 originating_on = 'FT ' + _(inv.ref)
                                 invoice_date = _(inv.invoice_date)[:10]
                                 description = ' '
@@ -1043,9 +960,7 @@ class WizardSaft(models.Model):
                         else:
                             et.SubElement(tax_el, 'TaxPercentage').text = str(tax.amount)
                             TaxPayable = round(amount * (tax.amount/100), 2)
-                        # 4.4.4.14.6.5 Se coloca o TaxPercentage não coloca o TaxAmount
                         # 4.4.4.14.6.6
-                        # TODO: fazer as exemption reasons virem de uma tabela
                         if tax.exemption_reason is not None and tax.exemption_reason != '' and \
                                 (tax.amount is False or tax.amount == 0.0):
                             et.SubElement(line, 'TaxExemptionReason').text = _(
@@ -1060,16 +975,6 @@ class WizardSaft(models.Model):
                             pass
                         elif tax.amount == 0.0 and tax.exemption_reason:
                             pass
-                        # else:
-                        #     raise ValidationError(_('Error in TaxPercentage on payment '+ _(payments.name)))
-                        # if payments.tipo_pagamento == 'RC' and not tax:
-                        #     raise ValidationError(_('Error in payment '+ _(payments.name)+ ', payment without tax.'))
-                        # if (tax.saft_tax_type and not payments.tipo_pagamento) or \
-                        #         payments.tipo_pagamento == 'RG':
-                        #     pass
-                        # else:
-                        #     raise ValidationError(_('Error in payment type on payment ' + _(payments.name)))
-                    ####################
                     # 4.4.4.15
                     document_totals = et.SubElement(payment, 'DocumentTotals')
                     # 4.4.4.15.1
@@ -1080,7 +985,6 @@ class WizardSaft(models.Model):
                     et.SubElement(document_totals, 'GrossTotal').text = str(payments.amount)
 
         return payments_el
-
     
     def _write_movement_of_goods(self):
         def _preencher_endereco(ship_to, cliente):
@@ -1168,11 +1072,6 @@ class WizardSaft(models.Model):
                 # 4.2.3.6
                 et.SubElement(stock_movement, 'MovementDate').text = str(picking.date)[:10]
                 # 4.2.3.7
-                # GR – Guia de remessa;                                  out
-                # GT – Guia de transporte;                               int
-                # GA – Guia de movimentação de ativos próprios;          para já não usamos
-                # GC – Guia de consignação;                              visto
-                # GD – Guia ou nota de devolução efetuada pelo cliente.  para já não usamos
                 doc_tipo = 'GR'
                 if picking.is_gc is True:
                     doc_tipo = 'GC'
@@ -1195,8 +1094,6 @@ class WizardSaft(models.Model):
                 else:
                     cliente = picking.partner_id
                 # 4.2.3.11
-                # da erro se for uma guia de devolucao. Falta ver se sao materias primas para
-                # serem assembladcas no fornecedor
                 if picking.is_gd:
                     et.SubElement(stock_movement, 'SupplierID').text = str(cliente.id)
                 else:
@@ -1206,7 +1103,6 @@ class WizardSaft(models.Model):
                 # 4.2.3.14
                 if picking.note and picking.note != '':
                     et.SubElement(stock_movement, 'MovementComments').text = _(picking.note)[:50]
-                    # o limite é 60 mas se tiver acentos a AT conta mais
 
                 # 4.2.3.15
                 ship_to = et.SubElement(stock_movement, 'ShipTo')
@@ -1272,70 +1168,6 @@ class WizardSaft(models.Model):
                 movement_of_goods.tail = '\n'
         return movement_of_goods
 
-    
-    def _write_sale_order(self, sale, eparent):
-        _logger.info("saft :", ' A exportar sale_orders')
-        #   4.3.
-        #   4.3.4.1.    (DocumentNumber)*
-        et.SubElement(eparent, u"DocumentNumber").text = sale.name
-        #  4.3.4.2. (ACTUD)*
-        et.SubElement(eparent, u"ATCUD").text = sale.atcud or '0'
-        #  4.3.4.3. (DocumentStatus)*
-        #  4.3.4.3.1. (WorkStatus)
-        status_code = 'N'
-        for line in sale.order_line:
-            self.env.cr.execute('Select invoice_line_id from sale_order_line_invoice_rel '
-                                'where order_line_id = %s' % line.id)
-            invoice_lines = self.env.cr.fetchall()
-            for invoice_line_id in invoice_lines:
-                if self.env['account.move.line'].sudo().search([('display_type', '=', False),
-                                                         ('id', '=', invoice_line_id[0])]).move_id.hash:
-                    status_code = 'F'  # Faturado
-                    continue
-        if sale.state == 'cancel':
-            status_code = 'A'  # Cancelado
-        elif status_code == 'F':
-            pass
-        else:
-            status_code = 'N'  # Normal
-
-        document_status = et.SubElement(eparent, u"DocumentStatus")
-        et.SubElement(document_status, u"WorkStatus").text = status_code
-        et.SubElement(document_status, u"WorkStatusDate").text = str(sale.write_date)[:19].replace(" ", "T")
-        if sale.write_uid:
-            login = sale.write_uid.login
-        elif sale.create_uid:
-            login = sale.create_uid.login
-        # 4.3.4.3.4. (SourceID)*
-        et.SubElement(document_status, u"SourceID").text = login[:30]
-        # 4.3.4.3.5. (SourceBilling)*
-        et.SubElement(document_status, u"SourceBilling").text = 'P'
-        # fim DocumentStatus
-        # 4.3.4.3.2. (WorkStatusDate)
-        date = str(sale.write_date)[:19].replace(" ", "T")
-        # 4.3.4.3.4. (Reason)
-        # if sale.state == 'cancel':
-        #     et.SubElement(eparent, u"Reason").text = sale.descricao_cancel
-        # 4.3.4.4. (Hash)*
-        et.SubElement(eparent, u"Hash").text = sale.hash
-        # 4.3.4.5. (HashControl)*
-        et.SubElement(eparent, u"HashControl").text = str(sale.hash_control)
-        # 4.3.4.6. (Period)
-        et.SubElement(eparent, u"Period").text = str(sale.date_order)[5:7]
-        # 4.3.4.7. (WorkDate)*
-        et.SubElement(eparent, u"WorkDate").text = str(sale.date_order.date())
-        # 4.3.4.8. (WorkType)*
-        et.SubElement(eparent, u"WorkType").text = sale.type_doc
-        # 4.3.4.9. (SourceID)*
-        et.SubElement(eparent, u"SourceID").text = login[:30]
-        # 4.3.4.11. (SystemEntryDate)*
-        if sale.hash_date is not False:
-            et.SubElement(eparent, u"SystemEntryDate").text = date_format(sale.hash_date, 'DateTimeType')
-        # # 4.3.4.13. (CustomerID)**
-        et.SubElement(eparent, u"CustomerID").text = str(sale.partner_id.id)
-        return True
-
-    
     def _sale_orders(self, start_date, final_date, empresa, esource_documents):
         args_sales = [('date_order', '>=', start_date),
                       ('date_order', '<=', final_date),
@@ -1443,7 +1275,6 @@ class WizardSaft(models.Model):
                             if tax.amount == 0.0 and not tax.exemption_reason:
                                 raise ValidationError(_('Tax exemption reason in lack on tax named ' + tax.name + '.'))
 
-                        # 4.1.4.14.15  SettlementAmount (optional) - valor do desconto da linha
                         et.SubElement(eline, u"SettlementAmount").text = \
                             str(round(Decimal(((sale_line.discount / 100) *
                                                (sale_line.price_unit * sale_line.product_uom_qty)) / cambio),2))
@@ -1478,7 +1309,68 @@ class WizardSaft(models.Model):
             etotal_credit_sales.text = str(float(round(total_credit_sales,2)))
             return esale_orders
 
-    
+    def _write_sale_order(self, sale, eparent):
+        _logger.info("saft :", ' A exportar sale_orders')
+        #   4.3.
+        #   4.3.4.1.    (DocumentNumber)*
+        et.SubElement(eparent, u"DocumentNumber").text = sale.name
+        #  4.3.4.2. (ACTUD)*
+        et.SubElement(eparent, u"ATCUD").text = sale.atcud or '0'
+        #  4.3.4.3. (DocumentStatus)*
+        #  4.3.4.3.1. (WorkStatus)
+        status_code = 'N'
+        for line in sale.order_line:
+            self.env.cr.execute('Select invoice_line_id from sale_order_line_invoice_rel '
+                                'where order_line_id = %s' % line.id)
+            invoice_lines = self.env.cr.fetchall()
+            for invoice_line_id in invoice_lines:
+                if self.env['account.move.line'].sudo().search([('display_type', '=', False),
+                                                         ('id', '=', invoice_line_id[0])]).move_id.hash:
+                    status_code = 'F'  # Faturado
+                    continue
+        if sale.state == 'cancel':
+            status_code = 'A'  # Cancelado
+        elif status_code == 'F':
+            pass
+        else:
+            status_code = 'N'  # Normal
+
+        document_status = et.SubElement(eparent, u"DocumentStatus")
+        et.SubElement(document_status, u"WorkStatus").text = status_code
+        et.SubElement(document_status, u"WorkStatusDate").text = str(sale.write_date)[:19].replace(" ", "T")
+        if sale.write_uid:
+            login = sale.write_uid.login
+        elif sale.create_uid:
+            login = sale.create_uid.login
+        # 4.3.4.3.4. (SourceID)*
+        et.SubElement(document_status, u"SourceID").text = login[:30]
+        # 4.3.4.3.5. (SourceBilling)*
+        et.SubElement(document_status, u"SourceBilling").text = 'P'
+        # fim DocumentStatus
+        # 4.3.4.3.2. (WorkStatusDate)
+        date = str(sale.write_date)[:19].replace(" ", "T")
+        # 4.3.4.3.4. (Reason)
+        # if sale.state == 'cancel':
+        #     et.SubElement(eparent, u"Reason").text = sale.descricao_cancel
+        # 4.3.4.4. (Hash)*
+        et.SubElement(eparent, u"Hash").text = sale.hash
+        # 4.3.4.5. (HashControl)*
+        et.SubElement(eparent, u"HashControl").text = str(sale.hash_control)
+        # 4.3.4.6. (Period)
+        et.SubElement(eparent, u"Period").text = str(sale.date_order)[5:7]
+        # 4.3.4.7. (WorkDate)*
+        et.SubElement(eparent, u"WorkDate").text = str(sale.date_order.date())
+        # 4.3.4.8. (WorkType)*
+        et.SubElement(eparent, u"WorkType").text = sale.type_doc
+        # 4.3.4.9. (SourceID)*
+        et.SubElement(eparent, u"SourceID").text = login[:30]
+        # 4.3.4.11. (SystemEntryDate)*
+        if sale.hash_date is not False:
+            et.SubElement(eparent, u"SystemEntryDate").text = date_format(sale.hash_date, 'DateTimeType')
+        # # 4.3.4.13. (CustomerID)**
+        et.SubElement(eparent, u"CustomerID").text = str(sale.partner_id.id)
+        return True
+
     def _write_source_documents(self, start_date, final_date, versao, empresa):
         _logger.info("saft :", ' A exportar Source Documents')
 
@@ -1568,14 +1460,6 @@ class WizardSaft(models.Model):
                                                                                             (invoice_line.discount/100)), 2)))
                                 else:
                                     et.SubElement(eline, u"UnitPrice").text = '0'
-
-                                    # Valor tributável unitário que não concorre para o Total do documento sem impostos
-                                    # (NetTotal). Este valor é o que serve de base de cálculo dos impostos da linha.
-                                    # O sinal (debito ou crédito) com que o imposto assim calculado concorre para o
-                                    # TaxPayable, resulta da existência na linha do DebitAmount ou do CreditAmount.
-
-                                # TODO: TaxPointDate - data do acto gerador do imposto - da entrega ou prestação do serviço
-                                # usar data da guia de remessa, igual à data usada em ShipTo/DeliveryDate
                                 et.SubElement(eline, u"TaxPointDate").text = str(invoice.date)
 
                                 # TODO: 4.1.4.14.9 References (optional)
@@ -1625,7 +1509,6 @@ class WizardSaft(models.Model):
                                             # 4.1.4.14.13.4**  TaxPercentage ou 4.1.4.14.13.5** TaxAmount
                                             et.SubElement(etax, u"TaxPercentage").text = str(imposto.amount)
 
-                                            # 4.1.4.14.14** ExemptionReason - obrigatorio se TaxPercent e TaxAmount ambos zero
                                             if imposto.saft_tax_type == 'IVA' and imposto.amount == 0.0:
                                                 if not imposto.exemption_reason or len(imposto.exemption_reason.name) < 6:
                                                     raise ValidationError(_('Falta configurar o motivo de isenção '
@@ -1646,7 +1529,6 @@ class WizardSaft(models.Model):
                                                 raise ValidationError(
                                                     _('Tax exemption reason in lack on tax ' + imposto.name +
                                                       'define it in order to proceed'))
-                                        # 4.1.4.14.15  SettlementAmount (optional) - valor do desconto da linha
                                         et.SubElement(eline, u"SettlementAmount").text = \
                                             str(round(Decimal(((invoice_line.discount / 100) *
                                                                (invoice_line.price_unit * invoice_line.quantity)) / cambio), 2))
@@ -1681,9 +1563,6 @@ class WizardSaft(models.Model):
         #docs_m_o_g = self._write_movement_of_goods()
         #if docs_m_o_g:
         #    esource_documents.append(docs_m_o_g)
-
-        # Os pagamento só vão para o saft se o mesmo for Integrado ou se a empresa
-        # for de iva de caixa e o saft nao for de contabilidade
         sales = self._sale_orders(start_date, final_date, empresa, esource_documents)
         if sales:
             esource_documents.append(sales)

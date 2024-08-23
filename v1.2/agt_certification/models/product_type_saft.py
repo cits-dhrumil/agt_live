@@ -11,14 +11,13 @@ from odoo import models, fields, api
 
 class TipoProdutoSaft(models.Model):
     _name = "tipo.produto.saft"
-    _description = "Tipos de produtos de acordo com as opçoes no ficheiro exportavel de stock para a AT"
+    _description = "Types of products according to the options in the exportable stock file for AT"
 
-    name = fields.Char(string="Nome")
-    code = fields.Char(string="Código")
+    name = fields.Char(string="Name")
+    code = fields.Char(string="code")
 
     _sql_constraints = [('code_unique', 'unique(code)', 'Código deve ser único!')]
 
-    # definir produtos sem tipo de produto Saft como Mercadoria por defeito
     @api.model
     def create(self, vals):
         tipoproduto_saft = super(TipoProdutoSaft, self).create(vals)

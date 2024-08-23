@@ -18,91 +18,12 @@ class AlertAtcud(models.TransientModel):
     _name = "alert.atcud"
     _description = "Wizard de adicao de atcud"
 
-    def _compute_qr_code_image(self, qr_code_data):
-        qr = qrcode.QRCode(
-            version=10,
-            error_correction=qrcode.constants.ERROR_CORRECT_M,
-            box_size=2,
-            border=2,
-        )
-        qr.add_data(qr_code_data)
-        qr.make(fit=True)
-        img = qr.make_image()
-        temp = BytesIO()
-        img.save(temp, format="PNG")
-        qr_image = base64.b64encode(temp.getvalue())
-        return qr_image
-
-    
-    def get_tipo_documento_from_sequence(self, sequence_id):
-
-        #VENNDAS
-        if sequence_id.code == 'sale.order.or':
-            type = 'OR'
-        elif sequence_id.code == 'pro.forma':
-            type = 'PP'
-        elif sequence_id.code == 'cosignation':
-            type = 'FC'
-        elif sequence_id.code == 'nota.encomenda':
-            type = 'NE'
-
-        #FATURAS
-        account_journal = self.env['account.journal']
-        for journal in account_journal.search([('sequence_id', '=', sequence_id.id) ]):
-            type = journal.saft_inv_type
-        for journal in account_journal.search([('refund_sequence_id', '=', sequence_id.id)]):
-            type = 'NC'
-
-        #RECIBOS
-        if sequence_id.code in ('account.payment.transfer', 'account.payment.customer.invoice',
-                         'account.payment.customer.refund', 'account.payment.supplier.refund',
-                         'account.payment.supplier.invoice'):
-            type = 'RG'
-
-        #GUIAS
-        stock_picking_type = self.env['stock.picking.type']
-        for picking_types in stock_picking_type.search(['|', ('sequence_id_validate', '=', sequence_id.id),
-                                                        ('sequence_id_gd_validate', '=', sequence_id.id)]):
-            if picking_types.code == 'incoming':
-                type = 'GD'
-            if picking_types.code == 'outgoing':
-                type = 'GR'
-            if picking_types.code == 'internal':
-                type = 'GT'
-
-        if sequence_id.code == 'stock.picking.out.validate':
-            type = 'GR'
-        if sequence_id.code == 'stock.picking.internal.validate':
-            type = 'GT'
-        if sequence_id.code == 'stock.picking.gd.validate':
-            type = 'GD'
-
-        return type
-
-    
-    def get_identificador_serie(self, sequence_id, date):
-        if sequence_id and sequence_id.id:
-            ano = ''
-            if '%(year)s' in sequence_id.prefix:
-                ano = str(datetime.now())[:4]
-            elif '%(range_year)s' in sequence_id.prefix and date:
-                ano = str(date)[:4]
-            try:
-                identificador = sequence_id.prefix.split(' ')[1].replace('/', '')
-            except:
-                identificador = sequence_id.prefix.split('%')[0].replace('/', '')
-            if not identificador:
-                identificador = self.get_tipo_documento_from_sequence(sequence_id)
-            return identificador.replace('%(year)s', '').replace('%(range_year)s', '') + ano
-
-    
     def _get_sequences_that_need_atcud(self):
         list_of_sequences = []
         ir_sequence = self.env['ir.sequence']
         account_journal = self.env['account.journal']
         stock_picking_type = self.env['stock.picking.type']
 
-        #vendas e recibos
         list_of_codes = ('sale.order.or', 'pro.forma', 'cosignation', 'nota.encomenda',
                          'account.payment.transfer', 'account.payment.customer.invoice',
                          'account.payment.customer.refund', 'account.payment.supplier.refund',
@@ -111,14 +32,12 @@ class AlertAtcud(models.TransientModel):
             if seqs not in list_of_sequences:
                 list_of_sequences.append(seqs)
 
-        #faturacao
         for journal_id in account_journal.search([('type', '=', 'sale')]):
             if journal_id.sequence_id.id and journal_id.sequence_id not in list_of_sequences:
                 list_of_sequences.append(journal_id.sequence_id)
             if journal_id.refund_sequence_id.id and journal_id.refund_sequence_id not in list_of_sequences:
                 list_of_sequences.append(journal_id.refund_sequence_id)
 
-        #guias
         for picking_types in stock_picking_type.search([]):
             if picking_types.sequence_id_validate.id and picking_types.sequence_id_validate not in list_of_sequences:
                 list_of_sequences.append(picking_types.sequence_id_validate)
@@ -135,6 +54,35 @@ class AlertAtcud(models.TransientModel):
                 list_of_sequences.remove(data)
         return list_of_sequences
 
+    def _compute_qr_code_image(self, qr_code_data):
+        qr = qrcode.QRCode(
+            version=10,
+            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            box_size=2,
+            border=2,
+        )
+        qr.add_data(qr_code_data)
+        qr.make(fit=True)
+        img = qr.make_image()
+        temp = BytesIO()
+        img.save(temp, format="PNG")
+        qr_image = base64.b64encode(temp.getvalue())
+        return qr_image
+
+    def get_identificador_serie(self, sequence_id, date):
+        if sequence_id and sequence_id.id:
+            ano = ''
+            if '%(year)s' in sequence_id.prefix:
+                ano = str(datetime.now())[:4]
+            elif '%(range_year)s' in sequence_id.prefix and date:
+                ano = str(date)[:4]
+            try:
+                identificador = sequence_id.prefix.split(' ')[1].replace('/', '')
+            except:
+                identificador = sequence_id.prefix.split('%')[0].replace('/', '')
+            if not identificador:
+                identificador = self.get_tipo_documento_from_sequence(sequence_id)
+            return identificador.replace('%(year)s', '').replace('%(range_year)s', '') + ano
     
     def treat_sequences(self):
         list_of_atcud_sequences = self.env['ir.sequence.atcud']
@@ -158,7 +106,47 @@ class AlertAtcud(models.TransientModel):
         self.treat_sequences()
         return self.env.ref('agt_certification.action_ir_sequence_atcud').read()[0]
 
-    
+    def get_tipo_documento_from_sequence(self, sequence_id):
+
+        if sequence_id.code == 'sale.order.or':
+            type = 'OR'
+        elif sequence_id.code == 'pro.forma':
+            type = 'PP'
+        elif sequence_id.code == 'cosignation':
+            type = 'FC'
+        elif sequence_id.code == 'nota.encomenda':
+            type = 'NE'
+
+        account_journal = self.env['account.journal']
+        for journal in account_journal.search([('sequence_id', '=', sequence_id.id) ]):
+            type = journal.saft_inv_type
+        for journal in account_journal.search([('refund_sequence_id', '=', sequence_id.id)]):
+            type = 'NC'
+
+        if sequence_id.code in ('account.payment.transfer', 'account.payment.customer.invoice',
+                         'account.payment.customer.refund', 'account.payment.supplier.refund',
+                         'account.payment.supplier.invoice'):
+            type = 'RG'
+
+        stock_picking_type = self.env['stock.picking.type']
+        for picking_types in stock_picking_type.search(['|', ('sequence_id_validate', '=', sequence_id.id),
+                                                        ('sequence_id_gd_validate', '=', sequence_id.id)]):
+            if picking_types.code == 'incoming':
+                type = 'GD'
+            if picking_types.code == 'outgoing':
+                type = 'GR'
+            if picking_types.code == 'internal':
+                type = 'GT'
+
+        if sequence_id.code == 'stock.picking.out.validate':
+            type = 'GR'
+        if sequence_id.code == 'stock.picking.internal.validate':
+            type = 'GT'
+        if sequence_id.code == 'stock.picking.gd.validate':
+            type = 'GD'
+
+        return type
+
     def call_wizard_alert_atcud(self, sequence_id, type_doc, hide):
         action = self.env.ref('agt_certification.action_wizard_alert_atcud').read()[0]
         action['context'] = {'default_sequence_id': sequence_id.id, 'default_tipo_documento': type_doc, 'default_hide': hide}
@@ -172,7 +160,16 @@ class AlertAtcud(models.TransientModel):
              ("date_to", ">=", date_end)], limit=1)
         return date_range
 
-    
+    def _get_codigo_validacao_serie(self, sequence_id, date_start):
+        if sequence_id:
+            sequence_id_search = self.env['ir.sequence'].sudo().search([('id', '=', sequence_id.id)])
+            if sequence_id_search.use_date_range:
+                return self._get_date_range(sequence_id.id, date_start, date_start).codigo_validacao_serie
+            else:
+                return sequence_id_search.codigo_validacao_serie
+        else:
+            return False
+
     def add_new_code(self):
         for wizard in self:
             if not wizard.sequence_id:
@@ -215,18 +212,6 @@ class AlertAtcud(models.TransientModel):
                 'tag': 'reload',
             }
 
-    
-    def _get_codigo_validacao_serie(self, sequence_id, date_start):
-        if sequence_id:
-            sequence_id_search = self.env['ir.sequence'].sudo().search([('id', '=', sequence_id.id)])
-            if sequence_id_search.use_date_range:
-                return self._get_date_range(sequence_id.id, date_start, date_start).codigo_validacao_serie
-            else:
-                return sequence_id_search.codigo_validacao_serie
-        else:
-            return False
-
-    
     def change_prefix_year(self):
         for wizard in self:
             prefixo = wizard.sequence_id.prefix
@@ -271,6 +256,31 @@ class AlertAtcud(models.TransientModel):
                 else:
                     wizard.inicio_numeracao_boolean = False
 
+    def act_fechar(self):
+        return {'type': 'ir.actions.act_window_close'}
+
+
+
+    sequence_id = fields.Many2one('ir.sequence', string="sequence", readonly=True)
+    codigo_validacao_serie = fields.Char(string="Series Validation Code",
+                                         help="Unique code for this series to be provided by AT.")
+    identificador_serie = fields.Char(string="Series Identifier", compute=_get_dados)
+    inicio_numeracao = fields.Char(string="Start of Numbering", compute=_get_dados)
+    inicio_numeracao_new = fields.Char(string="Start of Numbering")
+    data_prevista_inicio = fields.Date(string="Expected Start Date", help="Leave empty to define new code without dates")
+    data_prevista_fim= fields.Date(string="Expected End Date")
+    tipo_documento = fields.Char(string="Document Type", readonly=True)
+    inicio_numeracao_boolean = fields.Boolean(string="Check if Numbering Start", compute=_get_dados)
+    show_error = fields.Boolean(string="Show Error", compute=_get_dados)
+    error_message = fields.Text(string="Error Message", compute=_get_dados)
+    hide = fields.Selection([('0', '0'),('1', '1'),('2', '2')], default='0')
+
+    def act_cancel(self):
+        self.env['account.move'].check_advance()
+        fatura = self.env['account.move'].browse(self.env.context.get('active_id'))
+        fatura.reason_cancel = self.descricao_cancel
+        fatura.action_invoice_cancel()
+
     @api.onchange('sequence_id', 'data_prevista_inicio', 'data_prevista_fim')
     def _onchange_codigo_validacao(self):
         for wizard in self:
@@ -287,28 +297,3 @@ class AlertAtcud(models.TransientModel):
                     wizard.codigo_validacao_serie = date_range.codigo_validacao_serie
                 else:
                     wizard.codigo_validacao_serie = wizard.sequence_id.codigo_validacao_serie
-
-    sequence_id = fields.Many2one('ir.sequence', string="Sequência", readonly=True)
-    codigo_validacao_serie = fields.Char(string="Código de Validação de Série",
-                                         help="Código único para esta série a fornecer pela AT.")
-    identificador_serie = fields.Char(string="Identificador da Série", compute=_get_dados)
-    inicio_numeracao = fields.Char(string="Início da Numeração", compute=_get_dados)
-    inicio_numeracao_new = fields.Char(string="Início da Numeração")
-    data_prevista_inicio = fields.Date(string="Data Prevista de Início", help="Deixe vazio para definir novo código sem datas")
-    data_prevista_fim= fields.Date(string="Data Prevista de Fim")
-    tipo_documento = fields.Char(string="Tipo de Documento", readonly=True)
-    inicio_numeracao_boolean = fields.Boolean(string="Check if Inicio de Numeracao", compute=_get_dados)
-    show_error = fields.Boolean(string="Show Error", compute=_get_dados)
-    error_message = fields.Text(string="Error Message", compute=_get_dados)
-    hide = fields.Selection([('0', '0'),('1', '1'),('2', '2')], default='0')
-
-    
-    def act_fechar(self):
-        return {'type': 'ir.actions.act_window_close'}
-
-    
-    def act_cancel(self):
-        self.env['account.move'].check_advance()
-        fatura = self.env['account.move'].browse(self.env.context.get('active_id'))
-        fatura.reason_cancel = self.descricao_cancel
-        fatura.action_invoice_cancel()

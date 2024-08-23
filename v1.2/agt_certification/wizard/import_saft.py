@@ -15,49 +15,15 @@ from odoo.exceptions import ValidationError
 
 tipos_saft = [  # ('C', 'Contabilidade'),                         # ctb na v.1
     ('F', u'Facturação'),  # fact na v.1
-    # ('I', u'Integrado - Contabilidade e Facturação'), # int
-    # ('S', u'Autofacturação'),                         # novo v.2
-    # ('P', u'Dados parciais de facturação')        # nao implementado
+
 ]
-#
-# account_paid_values = {
-#           'NOR': {
-#                         'PT': '24',
-#                         'PT-MA': '24331132',
-#                         'PT-AC': '24331133'},
-#           'INT': {
-#                         'PT': '24331121',
-#                         'PT-MA': '24331122',
-#                         'PT-AC': '24331123'},
-#           'RED': {
-#                         'PT': '24331111',
-#                         'PT-MA': '24331112',
-#                         'PT-AC': '24331113'},
-#           'ISE': {
-#                         'PT': '24331111',
-#                         'PT-MA': '24331112',
-#                         'PT-AC': '24331113'},
-#           'OUT': {
-#                         'PT': '24331111',
-#                         'PT-MA': '24331112',
-#                         'PT-AC': '24331113'}
-#         }
+
 complemento_values = {'PT-MA': 'M', 'PT-AC': 'A'}
 
 
 class wizard_l10n_pt_import_saft(models.Model):
     _name = "wizard.l10n_pt.import.saft"
     _description = "Importar Saft AT - Menu: Contabilidade - Relatorios - Saft - Importar Ficheiro Saft"
-
-    @api.model
-    def _default_company(self):
-        """Devolve a companhia do utilizador, ou a primeira encontrada"""
-        user = self.env['res.users'].browse(self.env.uid)
-
-        if self.env.user.company_id:
-            return user.company_id.id
-        return self.env['res.company'].search([('parent_id', '=', False)])[0]
-
 
     @api.depends('file')
     def _file_content(self):
@@ -67,56 +33,30 @@ class wizard_l10n_pt_import_saft(models.Model):
             content = ''
         self.file_content = _(content)
 
-    name = fields.Char(string="Resultado", size=128, readonly=True, copy=False)
-    erros = fields.Char(string="Incompatibilidades encontradas", readonly=True, copy=False)
-    tipo = fields.Selection(selection=tipos_saft, string="Tipo ficheiro", required=True, default="F", copy=False)
-    comp = fields.Many2one('res.company', string="Companhia", required=True, default=_default_company, copy=False)
-    file = fields.Binary(string="Ficheiro", copy=False)
-    filename = fields.Char(string="Nome do Ficheiro", size=64, readonly=True, copy=False)
-    file_content = fields.Text(compute='_file_content', string='Conteudo do Ficheiro', store=True, copy=False)
+    @api.model
+    def _default_company(self):
+        user = self.env['res.users'].browse(self.env.uid)
+
+        if self.env.user.company_id:
+            return user.company_id.id
+        return self.env['res.company'].search([('parent_id', '=', False)])[0]
+
+    name = fields.Char(string="Result", size=128, readonly=True, copy=False)
+    erros = fields.Char(string="Incompatibilities found", readonly=True, copy=False)
+    tipo = fields.Selection(selection=tipos_saft, string="File type", required=True, default="F", copy=False)
+    comp = fields.Many2one('res.company', string="Company", required=True, default=_default_company, copy=False)
+    file = fields.Binary(string="File", copy=False)
+    filename = fields.Char(string="File Name", size=64, readonly=True, copy=False)
+    file_content = fields.Text(compute='_file_content', string='File Content', store=True, copy=False)
     state = fields.Selection([('choose', 'choose'),
-                                        ('get', 'get')], string="Estado", default=lambda *a: 'choose', copy=False)
-    versao = fields.Selection([('1.03_01', '1.03_01')], default='1.03_01', string="Versão", required=True, copy=False)
-    partes = fields.Selection([('tudo', 'Tudo'), ('clientes', 'Clientes'), ('produtos', 'Produtos'),
-                                         ('faturas', 'Faturas'), ('guias', 'Guias'), ('pagamentos', 'Pagamentos')],
-                              string="Partes", required=True,
-                              help="No caso de escolher importar incrementalmente os clientes e produtos tem de ser importados antes das faturas",
+                                        ('get', 'get')], string="State", default=lambda *a: 'choose', copy=False)
+    versao = fields.Selection([('1.03_01', '1.03_01')], default='1.03_01', string="Version", required=True, copy=False)
+    partes = fields.Selection([('tudo', 'All'), ('clientes', 'Customers'), ('produtos', 'Products'),
+                                         ('faturas', 'Invoices'), ('guias', 'Guides'), ('pagamentos', 'Payments')],
+                              string="Parties", required=True,
                               default="tudo", copy=False)
     rollback = fields.Boolean(string="Rollback",
-                              help="Se não tiver visto vai fazendo commit à medida que vai importando.", default=True,
                               copy=False)
-
-    def act_cancel(self):
-        # self.unlink(ids, context)
-        return {'type': 'ir.actions.act_window_close'}
-
-    def act_destroy(self):
-        return {'type': 'ir.actions.act_window_close'}
-
-    def get_customer(self, vat, ref, create=False):
-        customer = self.env['res.partner'].search([
-            '|',
-            ('vat', '=', vat),
-            ('ref', '=', ref)], limit=1)
-        if not customer and not create:
-            raise ValidationError('Não exite cliente com o NIF ou Referência ' + ref)
-        return customer
-
-    def check_account_adjustments(self, company, type):
-        if type.find('out') != -1:
-            if company.account_adjustments_sale:
-                return company.account_adjustments_sale.id
-            else:
-                raise ValidationError(
-                    _('Precisa de configurar a conta de acertos de casa decimal para venda nas '
-                      'configurações da faturação.'))
-        else:
-            if company.account_adjustments_purchase:
-                return company.account_adjustments_purchase.id
-            else:
-                raise ValidationError(
-                    _('Precisa de configurar a conta de acertos de casa decimal para compra nas '
-                      'configurações da faturação.'))
 
     def check_total(self, dict):
         credit = 0
@@ -147,7 +87,41 @@ class wizard_l10n_pt_import_saft(models.Model):
             dict.append(new_line)
         return dict
 
-    
+    def get_customer(self, vat, ref, create=False):
+        customer = self.env['res.partner'].search([
+            '|',
+            ('vat', '=', vat),
+            ('ref', '=', ref)], limit=1)
+        if not customer and not create:
+            raise ValidationError('Não exite cliente com o NIF ou Referência ' + ref)
+        return customer
+
+    def check_account_adjustments(self, company, type):
+        if type.find('out') != -1:
+            if company.account_adjustments_sale:
+                return company.account_adjustments_sale.id
+            else:
+                raise ValidationError(
+                    _('Precisa de configurar a conta de acertos de casa decimal para venda nas '
+                      'configurações da faturação.'))
+        else:
+            if company.account_adjustments_purchase:
+                return company.account_adjustments_purchase.id
+            else:
+                raise ValidationError(
+                    _('Precisa de configurar a conta de acertos de casa decimal para compra nas '
+                      'configurações da faturação.'))
+
+    def saft_faturacao(self, document):
+        return True
+
+    def act_cancel(self):
+        # self.unlink(ids, context)
+        return {'type': 'ir.actions.act_window_close'}
+
+    def act_destroy(self):
+        return {'type': 'ir.actions.act_window_close'}
+
     def act_getfile(self):
         # historico
         for bug in self:
@@ -187,7 +161,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                 f.write("\n" + str(document))
                 f.close()
 
-                #   Clientes apto para 1.4
                 if self.partes in ['tudo', 'clientes']:
                     clientes = dom.getElementsByTagName("Customer")
                     for cliente in clientes:
@@ -282,7 +255,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                             if not self.rollback:
                                 self.env.cr.execute("commit")
 
-                #   Produtos apto para 1.4
                 if self.partes in ['tudo', 'produtos']:
                     produtos = dom.getElementsByTagName("Product")
                     for produto in produtos:
@@ -320,7 +292,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                             if not self.rollback:
                                 self.env.cr.execute("commit")
 
-                    #    Impostos
                     impostos = dom.getElementsByTagName("TaxTableEntry")
                     for imposto in impostos:
                         TaxType = converter(((imposto.getElementsByTagName("TaxType")[0]).childNodes[0]).nodeValue)
@@ -435,7 +406,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         else:
                             SelfBillingIndicator = False
 
-                        # Na V9 o diario de vendas e usado para faturas e notas de credito
                         saft_inv_type = InvoiceType
 
                         if saft_inv_type == 'NC':
@@ -495,7 +465,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                                 'residual': residual,
                                 'isprinted': True,
                             })
-                            # criar linha do movimento da fatura
                             account_move_line_dict = [(0, 0, {
                                 'partner_id': customer.id,
                                 'journal_id': account_journal.id,
@@ -678,7 +647,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                                 'amount_total': GrossTotal,
                                 'move_id': account_move.id})
 
-                            # wkf
                             self.env.cr.execute("""
                                 INSERT INTO wkf_instance(wkf_id,uid,res_id,res_type,state)
                                 VALUES (1,1, %s,'account.move','active');
@@ -699,7 +667,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                             if not self.rollback:
                                 self.env.cr.execute("commit")
 
-                #   Guias
                 if self.partes in ['tudo', 'guias']:
                     guias = dom.getElementsByTagName("StockMovement")
 
@@ -720,7 +687,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         else:
                             HashControl = False
 
-                        # HashControl = converter(((guia.getElementsByTagName("HashControl")[0]).childNodes[0]).nodeValue)
                         MovementDate = converter(
                             ((guia.getElementsByTagName("MovementDate")[0]).childNodes[0]).nodeValue)
                         MovementType = converter(
@@ -807,7 +773,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                                 Description = converter(
                                     ((Line.getElementsByTagName("Description")[0]).childNodes[0]).nodeValue)
 
-                                # Produto
                                 product = self.env['product.product'].search([
                                     ('default_code', '=', ProductCode),
                                     ('company_id', '=', self.comp.id)])
@@ -827,7 +792,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                                         'factor': 1,
                                     })
 
-                                # locat
 
                                 if tipo == 'out':
                                     location_id = location_src.id
@@ -853,11 +817,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                                 if not self.rollback:
                                     self.env.cr.execute("commit")
 
-                                    ######################
-                                    ##   Fim Guias      ##
-                                    ######################
-
-                # Pagamentos
                 if self.partes in ['tudo', 'pagamentos']:
                     pagamentos = dom.getElementsByTagName("Payment")
                     for pagamento in pagamentos:
@@ -895,7 +854,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                             if str(PaymentStatus) == "A":
                                 estado = 'cancel'
 
-                            # Cliente
                             customer = self.get_customer(CustomerID, CustomerID)
                             receipt_account_journal = self.env['account.journal'].search([
                                 ('integrado', '=', True),
@@ -930,7 +888,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                                 'payment_method_id': payment_method.id
                             })
 
-                            # criar movimento do pagamento
                             self.env['account.move'].create({
                                 'state': "draft",
                                 'name': PaymentRefNo or '',
@@ -965,7 +922,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                                             ('company_id', '=', self.comp.id)], limit=1)
                                 if account_invoice:
                                     account_invoice.write({'state': 'paid', 'residual': 0})
-                                    # criar linha do movimento da linha do pagamento
                                     self.env.cr.execute("""
                                                         SELECT ml.id
                                                         FROM account_move_line ml, account_account aa
@@ -1020,10 +976,6 @@ class wizard_l10n_pt_import_saft(models.Model):
             if erros == "As incompatibilidades encontradas foram:":
                 erros = "Não foram encontradas incompatibilidades"
             return self.write({'state': 'get', 'name': res, 'erros': erros})
-
-        ############################
-        ##   SAFT Contabilidade   ##
-        ############################
         if self.tipo == 'C':
             document = document.encode("utf-8")
             document = document.replace('& ', '&amp; ')
@@ -1031,20 +983,11 @@ class wizard_l10n_pt_import_saft(models.Model):
             document = document.replace('Í', 'I')
 
             dom = xml.dom.minidom.parseString(document)
-
-            ############################
-            ##   Contas               ##
-            ############################
-            #todo todas???
             self.env.cr.execute("update account_account_type set close_method='unreconciled'")
 
             contas = dom.getElementsByTagName("GeneralLedger")
 
-            # self.env.cr.execute("select id from account_account_type where code='view' order by id")
-            # user_type = self.env.cr.fetchone()[0]
             view_user_type = self.env['account.account.type'].search([('code', '=', 'view')], order='id', limit=1)
-            # self.env.cr.execute("select c.name from res_company c, res_users u where c.id=u.company_id and u.id=" + str(self.env.uid))
-            # nome_empresa = self.env.cr.fetchone()[0]
             conta_mae = self.env['account.account'].create({
                 'user_type': view_user_type.id,
                 'code': '0',
@@ -1063,7 +1006,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                 AccountDescription = converter(
                     ((conta.getElementsByTagName("AccountDescription")[0]).childNodes[0]).nodeValue)
 
-                # se esta conta é filha (maior do que a anterior) da anterior, marcar essa anterior como view
                 if last_acc != None and len(AccountID) > len(last_acc):
                     self.env.cr.execute(
                         "select id from account_account where code='" + str(last_acc) + "' and company_id=" + str(
@@ -1071,7 +1013,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                     aux = self.env.cr.fetchone()[0]
                     self.env['account.account'].write([aux], {'type': 'view'})
                 else:
-                    # caso não seja encontrar a conta pai
                     parent_id = None
                     paiAccountID = AccountID[:-1]
                     aux = None
@@ -1088,7 +1029,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                             paiAccountID = ''
                         else:
                             paiAccountID = paiAccountID[:-1]
-                    # caso não exista criar a conta pai
                     if encontrou == False:
                         conta_pai = AccountID[:1]
                         self.env.cr.execute("select id from account_account_type where code='view' order by id")
@@ -1104,25 +1044,7 @@ class wizard_l10n_pt_import_saft(models.Model):
                             8: 'RESULTADOS',
                             9: '9'}
                         AccountDescription = account_description_dict[conta_pai]
-                        # if conta_pai == 1:
-                        #     AccountDescription = 'MEIOS FINANCEIROS LÍQUIDOS'
-                        # elif conta_pai == 2:
-                        #     AccountDescription = 'CONTAS A RECEBER E A PAGAR'
-                        # elif conta_pai == 3:
-                        #     AccountDescription = 'INVENTÁRIOS E ACTIVOS BIOLÓGICOS'
-                        # elif conta_pai == 4:
-                        #     AccountDescription = 'INVESTIMENTOS'
-                        # elif conta_pai == 5:
-                        #     AccountDescription = 'CAPITAL, RESERVAS E RESULTADOS TRANSITADOS'
-                        # elif conta_pai == 6:
-                        #     AccountDescription = 'GASTOS'
-                        # elif conta_pai == 7:
-                        #     AccountDescription = 'RENDIMENTOS'
-                        # elif conta_pai == 8:
-                        #     AccountDescription = 'RESULTADOS'
-                        # elif conta_pai == 9:
-                        #     AccountDescription = '9'
-                        # inserir a conta pai
+
                         parent_id = self.env['account.account'].create({
                             'parent_id': conta_mae,
                             'user_type': user_type,
@@ -1136,10 +1058,8 @@ class wizard_l10n_pt_import_saft(models.Model):
                         })
                         last_acc = str(conta_pai)
 
-                # DADOS PARA A CONTA CORRENTE
                 tipo = "view"
                 if len(AccountID) > 1:
-                    # if data_contas[AccountID]!=None:
                     tipo = "other"
                     if AccountID[:2] == '11':
                         tipo = "liquidity"
@@ -1153,7 +1073,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                 account_type = self.env['account.account.type'].search([
                     ('code', '=', 'view')], order='id')
 
-                # contas gerais
                 account_type_code_dict = {
                     '266': 'Accionistas/socios',
                     '269': 'Accionistas/socios',
@@ -1188,7 +1107,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                     account_type = self.env['account.account.type'].search([
                         ('code', '=', account_type_code_dict[AccountID[:1]])], order='id DESC')
 
-                    # Activo não corrente
                 if tipo != "view" and (AccountID[:2] == "43" or AccountID[:3] == "452" or (int(AccountID[:3]) >= 454 and int(AccountID[:2]) < 46)):
                     self.env.cr.execute(
                         "select id from account_account_type where code='Activos fixos tangiveis' order by id desc")
@@ -1314,7 +1232,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         "select id from account_account_type where code='Resultado liquido do periodo' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
 
-                    # Passivo (Passivo não corrente)
                 if tipo != "view" and AccountID[:2] == "29":
                     self.env.cr.execute("select id from account_account_type where code='Provisoes' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
@@ -1335,7 +1252,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         "select id from account_account_type where code='Outras contas a pagar' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
 
-                    # Passivo (Passivo corrente)
                 if tipo != "view" and (AccountID[:3] == "221" or AccountID[:3] == "222" or AccountID[:3] == "225"):
                     self.env.cr.execute("select id from account_account_type where code='Fornecedores' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
@@ -1370,7 +1286,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         "select id from account_account_type where code='Outros passivos financeiros' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
 
-                # inserir a conta atual
                 acc_id = self.env['account.account'].create({
                     'parent_id': parent_id,
                     'user_type': user_type,
@@ -1383,11 +1298,9 @@ class wizard_l10n_pt_import_saft(models.Model):
                     'level': len(AccountID),
                 })
 
-                # GUARDAR A CONTA ATUAL, PARA SER A ANTERIOR DA PROXIMA
                 parent_id = acc_id
                 last_acc = AccountID
 
-            # actulizar levels
             self.env.cr.execute("select id,parent_id from account_account where id!=" + str(conta_mae))
             contas = self.env.cr.fetchall()
             for conta in contas:
@@ -1399,24 +1312,10 @@ class wizard_l10n_pt_import_saft(models.Model):
                     parent_id = self.env.cr.fetchone()[0]
                 self.env['account.account'].write([conta[0]], {'level': nivel})
 
-            ############################
-            ##       Fim Contas       ##
-            ##       Clientes         ##
-            ############################
+
             clientes = dom.getElementsByTagName("Customer")
 
             for cliente in clientes:
-                # <CustomerID>003</CustomerID>
-                # <AccountID>211110023</AccountID>
-                # <CustomerTaxID>000000000</CustomerTaxID>
-                # <CompanyName>Institut Camille Milret</CompanyName>
-                # <BillingAddress>
-                #	<AddressDetail>Desconhecido</AddressDetail>
-                #	<City>Desconhecido</City>
-                #	<PostalCode>Desconhecido</PostalCode>
-                #	<Country>FR</Country>
-                # </BillingAddress>
-                # <SelfBillingIndicator>0</SelfBillingIndicator>
                 CustomerID = converter(((cliente.getElementsByTagName("CustomerID")[0]).childNodes[0]).nodeValue)
                 AccountID = converter(((cliente.getElementsByTagName("AccountID")[0]).childNodes[0]).nodeValue)
                 CustomerTaxID = converter(((cliente.getElementsByTagName("CustomerTaxID")[0]).childNodes[0]).nodeValue)
@@ -1472,27 +1371,9 @@ class wizard_l10n_pt_import_saft(models.Model):
                     'country_id': Country,
                 })
 
-
-            ############################
-            ##    Fim Clientes        ##
-            ##    Fornecedores        ##
-            ############################
             fornecedores = dom.getElementsByTagName("Supplier")
 
             for fornecedor in fornecedores:
-                # <Supplier>
-                #    <SupplierID>001</SupplierID>
-                #    <AccountID>221110001</AccountID>
-                #    <SupplierTaxID>510011993</SupplierTaxID>
-                #    <CompanyName>Flamínio &amp; Teixeira, Lda</CompanyName>
-                #    <BillingAddress>
-                #            <AddressDetail>Desconhecido</AddressDetail>
-                #            <City>Desconhecido</City>
-                #            <PostalCode>Desconhecido</PostalCode>
-                #            <Country>PT</Country>
-                #    </BillingAddress>
-                #    <SelfBillingIndicator>0</SelfBillingIndicator>
-                # </Supplier>
                 SupplierID = converter(((fornecedor.getElementsByTagName("SupplierID")[0]).childNodes[0]).nodeValue)
                 AccountID = converter(((fornecedor.getElementsByTagName("AccountID")[0]).childNodes[0]).nodeValue)
                 SupplierTaxID = converter(
@@ -1555,11 +1436,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         'country_id': Country,
                     })
 
-            ############################
-            ##    Fim Fornecedores    ##
-            ##    Impostos            ##
-            ############################
-
             impostos = dom.getElementsByTagName("TaxTableEntry")
 
             for imposto in impostos:
@@ -1572,7 +1448,7 @@ class wizard_l10n_pt_import_saft(models.Model):
 
                 TaxPercentage = TaxPercentage.replace("%", "")
 
-                account_paid = "243300"  # account_paid_values[TaxCode][TaxCountryRegion] or None
+                account_paid = "243300"
 
                 if account_paid != None:
                     conta = 8
@@ -1606,7 +1482,7 @@ class wizard_l10n_pt_import_saft(models.Model):
                     'price_include': False,
                 })
 
-                account_paid = "243300"  # account_paid_values[TaxCode][TaxCountryRegion] or None
+                account_paid = "243300"
 
                 if account_paid != None:
                     conta = 8
@@ -1640,10 +1516,7 @@ class wizard_l10n_pt_import_saft(models.Model):
                     'price_include': False,
                 })
 
-            #########################################
-            ##    Fim Impostos                     ##
-            ##    Diários, movimentos e linhas     ##
-            #########################################
+
             diarios = dom.getElementsByTagName("Journal")
 
             for diario in diarios:
@@ -1748,18 +1621,11 @@ class wizard_l10n_pt_import_saft(models.Model):
                             'blocked': False,
                         })
 
-            #########################################
-            ##   Fim Diários, movimentos e linhas  ##
-            #########################################
-
             res = "Importou " + str(imp) + " transacções"
             if erros == "As incompatibilidades encontradas foram:":
                 erros = "Não foram encontradas incompatibilidades"
             return self.write({'state': 'get', 'name': res, 'erros': erros})
 
-        ############################
-        ##   SAFT Integrado       ##
-        ############################
         if self.tipo == 'I':
             document = document.encode("utf-8")
             document = document.replace('& ', '&amp; ')
@@ -1770,9 +1636,6 @@ class wizard_l10n_pt_import_saft(models.Model):
             tax_code_obj = self.env['account.tax.code']
             dom = xml.dom.minidom.parseString(document)
 
-            ############################
-            ##   Contas               ##
-            ############################
             self.env.cr.execute("update account_account_type set close_method='unreconciled'")
 
             contas = dom.getElementsByTagName("GeneralLedger")
@@ -1805,7 +1668,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                 AccountDescription = converter(
                     ((conta.getElementsByTagName("AccountDescription")[0]).childNodes[0]).nodeValue)
 
-                # se esta conta é filha (maior do que a anterior) da anterior, marcar essa anterior como view
                 if last_acc != None and len(AccountID) > len(last_acc):
                     self.env.cr.execute(
                         "select id from account_account where code='" + str(last_acc) + "' and company_id=" + str(
@@ -1816,7 +1678,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                     except:
                         True
                 else:
-                    # caso não seja encontrar a conta pai
                     parent_id = None
                     paiAccountID = AccountID[:-1]
                     aux = None
@@ -1833,7 +1694,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                             paiAccountID = ''
                         else:
                             paiAccountID = paiAccountID[:-1]
-                    # caso não exista criar a conta pai
                     if encontrou == False:
                         conta_pai = AccountID[:1]
                         self.env.cr.execute("select id from account_account_type where code='view' order by id")
@@ -1856,8 +1716,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                             AccountDescription = 'RESULTADOS'
                         elif conta_pai == 9:
                             AccountDescription = '9'
-                        # inserir a conta pai
-                        # validar se ja existe
                         self.env.cr.execute(
                             "select id from account_account where code='" + str(conta_pai) + "' and company_id=" + str(
                                 self.comp.id))
@@ -1878,11 +1736,9 @@ class wizard_l10n_pt_import_saft(models.Model):
                             parent_id = aux[0]
                         last_acc = str(conta_pai)
 
-                # DADOS PARA A CONTA CORRENTE
                 tipo = "view"
                 if len(AccountID) > 1:
                     paiAccountID = AccountID[:-1]
-                    # if data_contas[AccountID]!=None:
                     tipo = "other"
                     if AccountID[:2] == '11':
                         tipo = "liquidity"
@@ -1894,7 +1750,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                 self.env.cr.execute("select id from account_account_type where code='view' order by id")
                 user_type = self.env.cr.fetchone()[0]
 
-                # contas gerais
                 if tipo != "view" and AccountID[:1] == "6":
                     self.env.cr.execute("select id from account_account_type where code='liability' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
@@ -1905,7 +1760,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                     self.env.cr.execute("select id from account_account_type where code='equity' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
 
-                    # Activo não corrente
                 if tipo != "view" and (AccountID[:2] == "43" or AccountID[:3] == "452" or (
                         int(AccountID[:3]) >= 454 and int(AccountID[:2]) < 46)):
                     self.env.cr.execute(
@@ -1950,7 +1804,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                     self.env.cr.execute(
                         "select id from account_account_type where code='Activos por impostos diferidos' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
-                    # Activo corrente
                 if tipo != "view" and ((int(AccountID[:2]) >= 32 and int(AccountID[:2]) < 37) or AccountID[:2] == "39"):
                     self.env.cr.execute("select id from account_account_type where code='Inventarios' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
@@ -1999,7 +1852,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         "select id from account_account_type where code='Caixa e depositos bancarios' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
 
-                    # Capital próprio
                 if tipo != "view" and (AccountID[:2] == "52" or AccountID[:3] == "261" or AccountID[:3] == "262"):
                     self.env.cr.execute("select id from account_account_type where code='Capital realizado' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
@@ -2041,7 +1893,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         "select id from account_account_type where code='Resultado liquido do periodo' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
 
-                    # Passivo (Passivo não corrente)
                 if tipo != "view" and AccountID[:2] == "29":
                     self.env.cr.execute("select id from account_account_type where code='Provisoes' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
@@ -2064,7 +1915,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         "select id from account_account_type where code='Outras contas a pagar' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
 
-                    # Passivo (Passivo corrente)
                 if tipo != "view" and (AccountID[:3] == "221" or AccountID[:3] == "222" or AccountID[:3] == "225"):
                     self.env.cr.execute("select id from account_account_type where code='Fornecedores' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
@@ -2103,8 +1953,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         "select id from account_account_type where code='Outros passivos financeiros' order by id desc")
                     user_type = self.env.cr.fetchone()[0]
 
-                # inserir a conta atual
-                # validar se ja existe
                 self.env.cr.execute("select id from account_account where code='" + str(AccountID) + "' and company_id=" + str(
                     self.comp.id))
                 aux = self.env.cr.fetchone()
@@ -2123,11 +1971,9 @@ class wizard_l10n_pt_import_saft(models.Model):
                 else:
                     acc_id = aux[0]
 
-                # GUARDAR A CONTA ATUAL, PARA SER A ANTERIOR DA PROXIMA
                 parent_id = acc_id
                 last_acc = AccountID
 
-            # actulizar levels
             self.env.cr.execute(
                 "select id,parent_id from account_account where id!=" + str(conta_mae) + " and company_id=" + str(
                     self.comp.id))
@@ -2143,24 +1989,9 @@ class wizard_l10n_pt_import_saft(models.Model):
                     parent_id = self.env.cr.fetchone()[0]
                 self.env['account.account'].write([conta[0]], {'level': nivel})
 
-            ############################
-            ##       Fim Contas       ##
-            ##       Clientes         ##
-            ############################
             clientes = dom.getElementsByTagName("Customer")
 
             for cliente in clientes:
-                # <CustomerID>003</CustomerID>
-                # <AccountID>211110023</AccountID>
-                # <CustomerTaxID>000000000</CustomerTaxID>
-                # <CompanyName>Institut Camille Milret</CompanyName>
-                # <BillingAddress>
-                #	<AddressDetail>Desconhecido</AddressDetail>
-                #	<City>Desconhecido</City>
-                #	<PostalCode>Desconhecido</PostalCode>
-                #	<Country>FR</Country>
-                # </BillingAddress>
-                # <SelfBillingIndicator>0</SelfBillingIndicator>
                 CustomerID = converter(((cliente.getElementsByTagName("CustomerID")[0]).childNodes[0]).nodeValue)
                 AccountID = converter(((cliente.getElementsByTagName("AccountID")[0]).childNodes[0]).nodeValue)
                 CustomerTaxID = converter(((cliente.getElementsByTagName("CustomerTaxID")[0]).childNodes[0]).nodeValue)
@@ -2200,13 +2031,7 @@ class wizard_l10n_pt_import_saft(models.Model):
                 if PostalCode == 'Desconhecido':
                     PostalCode = ''
 
-                # validar se ja existe
                 supplier = self.get_customer(CustomerID, CustomerTaxID, True)
-                # self.env.cr.execute("select id from res_partner where ref='" + str(CustomerID) + "' and vat='" + str(
-                #     CustomerTaxID) + "' and company_id=" + str(self.comp.id))
-                # aux = self.env.cr.fetchone()
-                #
-                # if aux == None or aux[0] == None:
                 if not supplier:
                     supplier = self.env['res.partner'].create({
                         'ref': CustomerID or '',
@@ -2226,26 +2051,10 @@ class wizard_l10n_pt_import_saft(models.Model):
                         'country_id': Country,
                     })
 
-            ############################
-            ##    Fim Clientes        ##
-            ##    Fornecedores        ##
-            ############################
             fornecedores = dom.getElementsByTagName("Supplier")
 
             for fornecedor in fornecedores:
-                # <Supplier>
-                #    <SupplierID>001</SupplierID>
-                #    <AccountID>221110001</AccountID>
-                #    <SupplierTaxID>510011993</SupplierTaxID>
-                #    <CompanyName>Flamínio &amp; Teixeira, Lda</CompanyName>
-                #    <BillingAddress>
-                #            <AddressDetail>Desconhecido</AddressDetail>
-                #            <City>Desconhecido</City>
-                #            <PostalCode>Desconhecido</PostalCode>
-                #            <Country>PT</Country>
-                #    </BillingAddress>
-                #    <SelfBillingIndicator>0</SelfBillingIndicator>
-                # </Supplier>
+
                 SupplierID = converter(((fornecedor.getElementsByTagName("SupplierID")[0]).childNodes[0]).nodeValue)
                 AccountID = converter(((fornecedor.getElementsByTagName("AccountID")[0]).childNodes[0]).nodeValue)
                 SupplierTaxID = converter(
@@ -2285,13 +2094,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                     City = ''
                 if PostalCode == 'Desconhecido':
                     PostalCode = ''
-
-                # self.env.cr.execute("select id from res_partner where ref='" + str(CustomerID) + "' or vat='" + str(
-                #     SupplierTaxID) + "' and company_id=" + str(self.comp.id))
-                # aux = self.env.cr.fetchone()
-                # if aux != None and aux[0] != None:
-                #     self.env.cr.execute("update res_partner set supplier=true where id=" + str(aux[0]))
-                # else:
                 supplier = self.get_customer(CustomerID, SupplierTaxID, True)
                 if not supplier:
                     supplier = self.env['res.partner'].create({
@@ -2312,10 +2114,7 @@ class wizard_l10n_pt_import_saft(models.Model):
                         'country_id': Country,
                     })
 
-            ############################
-            ##    Fim Fornecedores    ##
-            ##    Produtos            ##
-            ############################
+
             produtos = dom.getElementsByTagName("Product")
 
             for produto in produtos:
@@ -2348,7 +2147,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                             'type': 'normal',
                         })
 
-                # validar se ja existe
                 self.env.cr.execute("select id from product_product where default_code='" + str(ProductCode) + "'")
                 aux = self.env.cr.fetchone()
                 if aux == None or aux[0] == None:
@@ -2359,11 +2157,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         'categ_id': ProductGroup or False,
                     })
 
-            ############################
-            ##    Fim Produtos        ##
-            ##    Impostos            ##
-            ############################
-            # validar se ja existe
             self.env.cr.execute("select id from account_tax_code where name='" + _(nome_empresa) + "'")
             aux = self.env.cr.fetchone()
             if aux == None or aux[0] == None:
@@ -2374,7 +2167,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                 })
             else:
                 tax_code_emp_id = aux[0]
-            # validar se ja existe
             self.env.cr.execute("select id from account_tax_code where name='Balanço de Pagamento do IVA' and company_id=" + str(
                 self.comp.id))
             aux = self.env.cr.fetchone()
@@ -2387,21 +2179,12 @@ class wizard_l10n_pt_import_saft(models.Model):
                 })
             else:
                 tax_code_bal_id = aux[0]
-            # validar se ja existe
 
 
             impostos = dom.getElementsByTagName("TaxTableEntry")
 
             for imposto in impostos:
-                # <TaxTable>
-                #	    <TaxTableEntry>
-                #		<TaxType>IVA</TaxType>
-                #		<TaxCountryRegion>PT</TaxCountryRegion>
-                #		<TaxCode>ISE</TaxCode>
-                #		<Description>Isenta</Description>
-                #	        <TaxPercentage>0.00</TaxPercentage>
-                #	    </TaxTableEntry>
-                # </TaxTable>
+
                 TaxType = converter(((imposto.getElementsByTagName("TaxType")[0]).childNodes[0]).nodeValue)
                 TaxCountryRegion = converter(
                     ((imposto.getElementsByTagName("TaxCountryRegion")[0]).childNodes[0]).nodeValue)
@@ -2411,7 +2194,7 @@ class wizard_l10n_pt_import_saft(models.Model):
 
                 TaxPercentage = TaxPercentage.replace("%", "")
 
-                account_paid = "243300"  # account_paid_values[TaxCode][TaxCountryRegion] or None
+                account_paid = "243300"
 
 
                 if account_paid != None:
@@ -2432,7 +2215,6 @@ class wizard_l10n_pt_import_saft(models.Model):
 
                 complemento = complemento_values[TaxCountryRegion] or ''
 
-                # validar se ja existe
                 self.env.cr.execute("select id from account_tax where name='" + str(TaxPercentage + '%' + complemento) + "'")
                 aux = self.env.cr.fetchone()
                 if aux == None or aux[0] == None:
@@ -2471,7 +2253,6 @@ class wizard_l10n_pt_import_saft(models.Model):
 
                 complemento = complemento_values[TaxCountryRegion] or ''
 
-                # validar se ja existe
                 self.env.cr.execute("select id from account_tax where name='" + str(TaxPercentage + '%(c)' + complemento) + "'")
                 aux = self.env.cr.fetchone()
                 if aux == None or aux[0] == None:
@@ -2489,7 +2270,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         'price_include': False,
                     })
 
-            # adicionar impostos aos produtos
             self.env.cr.execute("select id from account_tax where type_tax_use='sale' and amount=0.2300 and company_id=" + str(
                 self.comp.id))
             aux = self.env.cr.fetchone()
@@ -2512,63 +2292,30 @@ class wizard_l10n_pt_import_saft(models.Model):
                 self.env.cr.execute("INSERT INTO product_taxes_rel(prod_id, tax_id) VALUES (" + str(p[0]) + ", " + str(
                     imposto_compras) + ")")
 
-            #########################################
-            ##    Fim Impostos                     ##
-            ##    Diários, movimentos e linhas     ##
-            #########################################
             diarios = dom.getElementsByTagName("Journal")
 
             for diario in diarios:
-                # <Journal>
-                #	<JournalID>00031</JournalID>
-                #	<Description>Bancos - Depósitos</Description>
-                #	<Transaction>
-                #		<TransactionID>2012-05-21 00031 50001</TransactionID>
-                #		<Period>5</Period>
-                #		<TransactionDate>2012-05-21</TransactionDate>
-                #		<SourceID>patricia</SourceID>
-                #		<Description>Rec. FT 11</Description>
-                #		<DocArchivalNumber>50001</DocArchivalNumber>
-                #		<TransactionType>N</TransactionType>
-                #		<GLPostingDate>2012-09-15T17:38:35</GLPostingDate>
-                #		<CustomerID>009</CustomerID>
-                #		<Line>
-                #			<RecordID>1</RecordID>
-                #			<AccountID>1201</AccountID>
-                #			<SystemEntryDate>2012-09-15T17:38:35</SystemEntryDate>
-                #			<Description>Rec. FT 11</Description>
-                #			<DebitAmount>162.50</DebitAmount>
-                #		</Line>
-                #	</Transaction>
-                # </Journal>
 
                 JournalID = converter(((diario.getElementsByTagName("JournalID")[0]).childNodes[0]).nodeValue)
                 Description = converter(((diario.getElementsByTagName("Description")[0]).childNodes[0]).nodeValue)
 
                 tipo = "general"
                 sadt_inv_type = "FT"
-                ##                    self.env.cr.execute("select id  from account_journal_view where name='Journal View'")
-                ##                    view_id=cr.fetchone()
+
                 if Description.find("Venda") != -1:
                     tipo = "sale"
                     sadt_inv_type = "FT"
-                ##                        self.env.cr.execute("select id  from account_journal_view where name='Sale/Purchase Journal View'")
-                ##                        view_id=cr.fetchone()
+
                 if Description.find("Nota de Crédito") != -1:
                     tipo = "sale_refund"
                     sadt_inv_type = "NC"
-                ##                        self.env.cr.execute("select id  from account_journal_view where name='Sale/Purchase Refund Journal View'")
-                ##                        view_id=cr.fetchone()
+
                 if Description.find("Compra") != -1:
                     tipo = "purchase"
-                ##                        self.env.cr.execute("select id  from account_journal_view where name='Sale/Purchase Journal View'")
-                ##                        view_id=cr.fetchone()
+
                 if Description.find("Banco") != -1:
                     tipo = "bank"
-                ##                        self.env.cr.execute("select id  from account_journal_view where name='Bank/Cash Journal View'")
-                ##                        view_id=cr.fetchone()
 
-                # validar se ja existe
                 self.env.cr.execute("select id from account_journal where code='" + str(JournalID) + "' and company_id=" + str(
                     self.comp.id))
                 aux = self.env.cr.fetchone()
@@ -2613,7 +2360,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                     if aux != None and aux[0] != None:
                         period_id = aux[0]
 
-                    # validar se ja existe
                     self.env.cr.execute("select id from account_move where name='" + str(Description) + "'")
                     aux = self.env.cr.fetchone()
                     if aux == None or aux[0] == None:
@@ -2674,52 +2420,9 @@ class wizard_l10n_pt_import_saft(models.Model):
                                 'blocked': False,
                                 # 'tax_code_id': tax_code_id,
                             })
-
-            #########################################
-            ##   Fim Diários, movimentos e linhas  ##
-            ##            Faturas                  ##
-            #########################################
             faturas = dom.getElementsByTagName("Invoice")
 
             for fatura in faturas:
-                # <Invoice>
-                #    <InvoiceNo>FT FT2013/001</InvoiceNo>
-                #    <InvoiceStatus>N</InvoiceStatus>
-                #    <Hash>cYZ4MpFkDCvLaY7LSfITGfTiwam9SGtnrRv/QMgkqiFhPQ3mbCu0PxECURvcwh8HNeAgK512v+RRCBW4C+q0xrcWxU6zhwIdLRcWjENRP9NfrckAexMVQ3UsKhfOkyawepEz9DBnhdEL7y133C8T++ih32bTJFMvGDvFjnwXmwU=</Hash>
-                #    <HashControl>1</HashControl>
-                #    <Period>01</Period>
-                #    <InvoiceDate>2013-01-02</InvoiceDate>
-                #    <InvoiceType>FT</InvoiceType>
-                #    <SelfBillingIndicator>0</SelfBillingIndicator>
-                #    <SystemEntryDate>2013-01-05T12:17:22</SystemEntryDate>
-                #    <CustomerID>13</CustomerID>
-                #    <Line>
-                #            <LineNumber>1</LineNumber>
-                #            <OrderReferences>
-                #                    <OriginatingON>Acordo Serviços Riluc</OriginatingON>
-                #            </OrderReferences>
-                #            <ProductCode>AMSO-N</ProductCode>
-                #            <ProductDescription>Avença Mensal Serviços Utilização Opencloud </ProductDescription>
-                #            <Quantity>1.0</Quantity>
-                #            <UnitOfMeasure>PCE</UnitOfMeasure>
-                #            <UnitPrice>20.0</UnitPrice>
-                #            <TaxPointDate>2013-01-02</TaxPointDate>
-                #            <Description>[AMSO-N] Avença Mensal Serviços Utilização Opencloud </Description>
-                #            <CreditAmount>20.0</CreditAmount>
-                #            <Tax>
-                #                    <TaxType>IVA</TaxType>
-                #                    <TaxCountryRegion>PT</TaxCountryRegion>
-                #                    <TaxCode>NOR</TaxCode>
-                #                    <TaxPercentage>23</TaxPercentage>
-                #            </Tax>
-                #            <SettlementAmount>0.0</SettlementAmount>
-                #    </Line>
-                #    <DocumentTotals>
-                #            <TaxPayable>4.6</TaxPayable>
-                #            <NetTotal>20.0</NetTotal>
-                #            <GrossTotal>24.60</GrossTotal>
-                #    </DocumentTotals>
-                # </Invoice>
 
                 InvoiceNo = converter(((fatura.getElementsByTagName("InvoiceNo")[0]).childNodes[0]).nodeValue)
                 InvoiceStatus = converter(((fatura.getElementsByTagName("InvoiceStatus")[0]).childNodes[0]).nodeValue)
@@ -2739,13 +2442,11 @@ class wizard_l10n_pt_import_saft(models.Model):
                 NetTotal = converter(((DocumentTotals.getElementsByTagName("NetTotal")[0]).childNodes[0]).nodeValue)
                 GrossTotal = converter(((DocumentTotals.getElementsByTagName("GrossTotal")[0]).childNodes[0]).nodeValue)
 
-                # Estado
                 if InvoiceStatus == 'A':
                     InvoiceStatus = 'cancel'
                 else:
                     InvoiceStatus = 'open'
 
-                # Periodo
                 ano = InvoiceDate[:4]
                 self.env.cr.execute(
                     "select id from account_period where code='" + Period + "/" + ano + "' and company_id=" + str(
@@ -2771,29 +2472,13 @@ class wizard_l10n_pt_import_saft(models.Model):
                 if InvoiceType != None and InvoiceType[0] != None:
                     InvoiceType = InvoiceType[0]
                 else:
-                    ##                        if memInvoiceType=='NC':
-                    ##                            InvoiceType =journal_obj.create({
-                    ##                                'code' :  'diario nc',
-                    ##                                'name': 'Diario NC',
-                    ##                                'type' : 'sale_refund',
-                    ##                                'sadt_inv_type': 'NC',
-                    ##                                'active' : True,
-                    ##                                'allow_date' : True,
-                    ##                                'update_posted' : True,
-                    ##                                'centralisation' : False,
-                    ##                                'group_invoice_lines' : False,
-                    ##                                'self_billing': sbi,
-                    ##                            })
-                    ##                        else:
+
                     InvoiceType = False
                     raise ValueError(_('UserError'), _('Nao foi encontrado um diario ') + _(InvoiceType))
 
-                # Data do hash
                 SystemEntryDate = SystemEntryDate.replace('T', ' ')
 
-                # Cliente
                 customer = self.get_customer(CustomerID, CustomerID)
-                # conta_cliente
                 account_id = None
                 self.env.cr.execute(
                     "select value_reference from ir_property where name='property_account_receivable' and res_id='res.partner," + str(
@@ -2811,7 +2496,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                     vec = str(linha[0]).split(',')
                     account_id = vec[1]
 
-                # Moeda
                 currency_id = None
                 self.env.cr.execute("select id from res_currency  where name='EUR'  and company_id=" + str(
                     self.comp.id) + " order by id asc")
@@ -2826,11 +2510,9 @@ class wizard_l10n_pt_import_saft(models.Model):
                 if memInvoiceType == 'NC':
                     tipo = 'out_refund'
 
-                    # todo fatura simplificada, ...
 
                 InvoiceNo = str(InvoiceNo)[3:]
 
-                # validar se ja existe
                 self.env.cr.execute("select id from account_invoice where journal_id=" + str(
                     InvoiceType) + " and internal_number='" + str(InvoiceNo) + "' and company_id=" + str(
                     self.comp.id))
@@ -2883,7 +2565,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         SettlementAmount = converter(
                             ((linha.getElementsByTagName("SettlementAmount")[0]).childNodes[0]).nodeValue)
 
-                        # Produto
                         self.env.cr.execute("select id from product_product where default_code='" + ProductCode + "'")
                         product_id = self.env.cr.fetchone()
                         if product_id != None and product_id[0] != None:
@@ -2891,7 +2572,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                         else:
                             product_id = False
 
-                        # unidade de medida
                         self.env.cr.execute("select id from product_uom where name='" + UnitOfMeasure + "'")
                         aux = self.env.cr.fetchone()
                         if aux != None and aux[0] != None:
@@ -2906,7 +2586,6 @@ class wizard_l10n_pt_import_saft(models.Model):
                                 'factor': 1,
                             })
 
-                        # conta_produto
                         account_id = None
                         self.env.cr.execute(
                             "select id from account_account where code like '71%' and type!='view' and company_id=" + str(
@@ -2955,15 +2634,7 @@ class wizard_l10n_pt_import_saft(models.Model):
                                     "INSERT INTO account_invoice_line_tax(invoice_line_id, tax_id) VALUES (" + str(
                                         id_linha_fatura) + ", " + str(id_imposto) + ")")
 
-            ######################
-            ##   Fim Faturas    ##
-            ######################
-
             res = "Importou " + str(imp) + " transacções"
             if erros == "As incompatibilidades encontradas foram:":
                 erros = "Não foram encontradas incompatibilidades"
             return self.write({'state': 'get', 'name': res, 'erros': erros})
-
-    def saft_faturacao(self, document):
-        return True
-

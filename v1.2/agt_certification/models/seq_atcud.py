@@ -12,12 +12,12 @@ from odoo import models, fields, api
 class IrSequenceAtcud(models.Model):
     _name = "ir.sequence.atcud"
 
-    sequence_id = fields.Many2one('ir.sequence', string="Sequência", readonly=True)
-    codigo_validacao_serie = fields.Char(string="Código de Validação de Série",
-                                         help="Código único para esta série a fornecer pela AT.", readonly=True)
-    identificador_serie = fields.Char(string="Identificador da Série", readonly=True)
-    inicio_numeracao = fields.Char(string="Início da Numeração", readonly=True)
-    tipo_documento = fields.Char(string="Tipo de Documento", readonly=True)
+    sequence_id = fields.Many2one('ir.sequence', string="Sequence", readonly=True)
+    codigo_validacao_serie = fields.Char(string="Validation Code",
+                                          readonly=True)
+    identificador_serie = fields.Char(string="Series Identifier", readonly=True)
+    inicio_numeracao = fields.Char(string="Start of Numbering", readonly=True)
+    tipo_documento = fields.Char(string="Document Type", readonly=True)
 
     
     def open_wizard(self):

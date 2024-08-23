@@ -12,6 +12,10 @@ from cryptography.hazmat.primitives.asymmetric import padding
 import base64
 
 
+def encode_base64(data):
+    """Base64 encode the data"""
+    return base64.b64encode(data).decode('utf-8')
+
 def load_private_key(private_key_path):
     """Load private key (1024 bits) from file"""
     with open(private_key_path, "rb") as key_file:
@@ -21,19 +25,6 @@ def load_private_key(private_key_path):
             backend=default_backend()
         )
     return private_key
-
-def generate_signature(message, private_key):
-    """Generate a signature based on SHA-1 and PKCS1 v1.5 padding"""
-    signature = private_key.sign(
-        message.encode('utf-8'),  # Encode message using UTF-8
-        padding.PKCS1v15(),       # Use PKCS1 v1.5 padding
-        hashes.SHA1()             # Use SHA-1 hash algorithm
-    )
-    return signature
-
-def encode_base64(data):
-    """Base64 encode the data"""
-    return base64.b64encode(data).decode('utf-8')
 
 def hash(self, manual, datadocumento, datasistema, number, numHash, antigoHash, totalbruto):
     '''This method is use for generating hash value'''
@@ -51,3 +42,12 @@ def hash(self, manual, datadocumento, datasistema, number, numHash, antigoHash, 
     previous_hash = encode_base64(previous_hash)
     values = {'hash': previous_hash, 'hash_date': datasistema}
     return values
+
+def generate_signature(message, private_key):
+    """Generate a signature based on SHA-1 and PKCS1 v1.5 padding"""
+    signature = private_key.sign(
+        message.encode('utf-8'),  # Encode message using UTF-8
+        padding.PKCS1v15(),       # Use PKCS1 v1.5 padding
+        hashes.SHA1()             # Use SHA-1 hash algorithm
+    )
+    return signature

@@ -19,7 +19,6 @@ from odoo.exceptions import UserError, RedirectWarning, ValidationError
 tz_pt = timezone('Europe/Lisbon')
 
 
-# tabela das ordens de venda e orçamentos - vendas - orçamentos / ordens de venda
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
     
@@ -163,26 +162,58 @@ class SaleOrder(models.Model):
             sale.qr_code_at_img = self.env['alert.atcud']._compute_qr_code_image(sale.qr_code_at)
 
     hash = fields.Char(string="Hash", size=256, readonly=True, help="Unique hash of the sale order.", copy=False)
-    hash_control = fields.Char(string="Chave", size=40, copy=False)
-    hash_date = fields.Datetime(string="Data em que o hash foi gerado", copy=False)
-    type_doc = fields.Selection([('OR', 'Orçamentos'),
-                                 ('NE', 'Nota de Encomenda'),
+    hash_control = fields.Char(string="key", size=40, copy=False)
+    hash_date = fields.Datetime(string="Date the hash was generated", copy=False)
+    type_doc = fields.Selection([('OR', 'Date the hash was generated'),
+                                 ('NE', 'Order Form'),
                                  ('PP', 'Pro-Forma'),
-                                 ('FC', 'Consignação')], readonly=True, copy=False)
+                                 ('FC', 'Consignment')], readonly=True, copy=False)
     certificated = fields.Boolean('Certificated', default=False, copy=False, readonly=True)
     old_name_proforma = fields.Char('Proforma', copy=False, search='_name_search', readonly=True)
     old_name_quotation = fields.Char('Quotation', copy=False, search='_name_search', readonly=True)
     old_name = fields.Char('Quotation draft', copy=False, search='_name_search', readonly=True)
     confirmed = fields.Boolean('Confirmed', copy=False, readonly=True, default=False)
-    descricao_cancel = fields.Char(string="Motivo do Cancelamento", size=64, copy=False)
+    descricao_cancel = fields.Char(string="Reason for Cancellation", size=64, copy=False)
     atcud = fields.Char(compute='_compute_atcud', string='ATCUD')
     qr_code_at = fields.Char(compute='_get_qr_code_generation', string='QR Code AT')
     qr_code_at_img = fields.Binary("QR Code", compute='_compute_qr_code_image')
     amount_by_group = fields.Binary(string="Tax amount by group", compute='_amount_by_group', help="type: [(name, amount, base, formated amount, formated base)]")
 
-    # Certificação das SO
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if (not self.env.context.get(
+                    'default_type_doc') and not self.type_doc) or self.type_doc == 'NE':
+                vals.update({
+                    'type_doc': 'OR'})
+        return super(SaleOrder, self).create(vals_list)
+
+    def write(self, vals):
+        super_write = super(SaleOrder, self).write(vals)
+        if 'state' in vals and vals['state'] == 'draft':
+            for sale_order in self:
+                if sale_order.certificated:
+                    raise ValidationError(
+                        _('You can not change the state of a certified document to draft!'))
+        return super_write
+
+    def copy(self, default=None):
+        default = {} if default is None else default.copy()
+        for sale_order in self:
+            if sale_order.type_doc:
+                default.update({'type_doc': sale_order.type_doc})
+        return super(SaleOrder, self).copy(default)
+
+    def unlink(self):
+        for line in self:
+            if line.state == 'draft' and not line.certificated:
+                return super(SaleOrder, self).unlink()
+            else:
+                raise ValidationError(
+                    _('Aviso\n Apenas é possível eliminar documentos '
+                      'no estado de rascunho e não certificados.'))
+
     def certify(self):
-        #ATCUD#
         if not self.company_id.pais_certificacao or self.company_id.pais_certificacao.code == 'PT':
             needs_atcud = self.env['ir.config_parameter'].sudo().get_param('needs_atcud')
             if needs_atcud == 'True':
@@ -209,8 +240,7 @@ class SaleOrder(models.Model):
                             raise UserError(_(
                                 'Falta definir o codigo de validação de sequência AT. Para configurar, '
                                 'deverá aceder ao menu Faturação -> Configuração -> Configurar ATCUD'))
-        # FIM ATCUD #
-        
+
         if not self.certificated:
             self.env.cr.execute("""
                            SELECT max(date_order)
@@ -254,11 +284,9 @@ class SaleOrder(models.Model):
                 datadocumento = sale_order.date_order
                 number = sale_order.name
                 totalbruto = sale_order.amount_total
-                # verificar se é o primeiro documento
                 self._cr.execute("select count(*) from sale_order where hash != '' and company_id=" +
                                  str(sale_order.company_id.id))
                 numHash = self._cr.fetchone()[0]
-                # Se não for o primeiro vai buscar o hash anterior
                 antigoHash = False
                 if numHash > 0:
                     self._cr.execute("SELECT so.hash FROM sale_order so, (select max(id) from sale_order " +
@@ -271,13 +299,11 @@ class SaleOrder(models.Model):
                 self.certificated = True
                 sale_order.write(values)
 
-    #       Certificação e envio por email das SO
     def action_quotation_send(self):
         if not self.certificated:
             self.certify()
         return super(SaleOrder, self).action_quotation_send()
 
-    
     def action_confirm(self):
         for sale in self:
             if sale.amount_total < 0:
@@ -290,36 +316,8 @@ class SaleOrder(models.Model):
             sale.certify()
         return super(SaleOrder, self).action_confirm()
 
-    # proibir apagar linhas em estado diferente de rascunho
-    def unlink(self):
-        for line in self:
-            if line.state == 'draft' and not line.certificated:
-                return super(SaleOrder, self).unlink()
-            else:
-                raise ValidationError(_('Aviso\n Apenas é possível eliminar documentos '
-                                        'no estado de rascunho e não certificados.'))
-
-    @api.model_create_multi
-    def create(self, vals_list):
-        for vals in vals_list:
-            if (not self.env.context.get('default_type_doc') and not self.type_doc) or self.type_doc == 'NE':
-                vals.update({
-                    'type_doc': 'OR'})
-        return super(SaleOrder, self).create(vals_list)
-
-    
-    def copy(self, default=None):
-        default = {} if default is None else default.copy()
-        for sale_order in self:
-            if sale_order.type_doc:
-                default.update({'type_doc': sale_order.type_doc})
-        return super(SaleOrder, self).copy(default)
-
     
     def action_cancel(self):
-        # no caso das vendas, retiramos a validacao de cancelar para periodos anteriores ao corrente
-        # if self.date_order.month < datetime.now().month:
-        #     raise ValidationError(_('You can only cancel SO from the current and following months.'))
         if not self.descricao_cancel:
             raise ValidationError(_('Incompleto.\n'
                                     'Introduza a razão do cancelamento no campo "Motivo do Cancelamento".'))
@@ -329,26 +327,8 @@ class SaleOrder(models.Model):
         integer, decimal = str(self.amount_total).split('.')
         return '.'.join([integer, decimal.ljust(2, '0')])
 
-    # validacoes ao alterar a venda
-    def write(self, vals):
-        super_write = super(SaleOrder, self).write(vals)
-        if 'state' in vals and vals['state'] == 'draft':
-            for sale_order in self:
-                if sale_order.certificated:
-                    raise ValidationError(_('You can not change the state of a certified document to draft!'))
-        return super_write
-
-
 class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
-
-    # nao permitir mais do que um imposto nas linhas dos orcamentos
-    @api.constrains('tax_id')
-    def _constraint_tax_id_one_tax(self):
-        for sale_line in self:
-            if len(sale_line.tax_id) >= 2:
-                raise ValidationError(_('Está a utilizar mais do que um imposto!'))
-            return True
 
     @api.constrains('discount')
     def _check_value(self):
@@ -356,4 +336,11 @@ class SaleOrderLine(models.Model):
             discount = sale_line.discount
             if discount < 0 or discount > 100:
                 raise ValidationError('O valor do desconto deve estar entre 0% e 100%.')
+            return True
+
+    @api.constrains('tax_id')
+    def _constraint_tax_id_one_tax(self):
+        for sale_line in self:
+            if len(sale_line.tax_id) >= 2:
+                raise ValidationError(_('Está a utilizar mais do que um imposto!'))
             return True

@@ -20,8 +20,8 @@ from . import stock
 from . import acc_move
 from . import acc_move_line
 from . import orders_at
-from . import ir_sequence
+from . import sequence
 from . import history_saft
-from . import ir_seq_atcud
+from . import seq_atcud
 from . import exemption_reason
 from . import pos_order

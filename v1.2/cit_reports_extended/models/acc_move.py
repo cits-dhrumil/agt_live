@@ -15,7 +15,6 @@ class AccountMove(models.Model):
 
     @api.depends('partner_id', 'partner_shipping_id')
     def _get_view_transportation_data(self):
-        # verificar se o partner_shipping_id é igual ao partner_id
         if self.partner_id and self.partner_shipping_id and self.partner_shipping_id != self.partner_id:
             self.view_transportation_data = True
         else:
@@ -26,7 +25,7 @@ class AccountMove(models.Model):
     vehicle_registration = fields.Char('Vehicle Registration', readonly=True, states={'draft': [('readonly', False)]})
     isprinted = fields.Boolean('Is Printed', copy=False)
     view_transportation_data = fields.Boolean('View Transportation Data', compute='_get_view_transportation_data')
-    credit = fields.Selection(selection=[('Rectification', 'Rectificação'), ('Annulment', 'Anulação')], string="Crédito")
+    credit = fields.Selection(selection=[('Rectification', 'Rectification'), ('Annulment', 'Annulment')], string="Credit")
 
     def _get_report_base_filename(self):
         self.ensure_one()

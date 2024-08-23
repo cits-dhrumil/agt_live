@@ -84,8 +84,6 @@ class AccountAccount(models.Model):
                     account.write({'parent_id': current_account.id})
         return current_account
 
-    # actualizar tipo de conta para GR se a conta pai for alterada para vazio
-    # actualizar conta pai caso exista
     def write(self, vals):
         if 'parent_id' in vals and vals['parent_id'] is False:
             vals['tipo_conta'] = "GR"
@@ -124,27 +122,6 @@ class AccountAccount(models.Model):
         for record in self:
             record.balance_with_context = balances.get(record.id, 0)
 
-    def get_billing_ledger_account(self):
-        """Recursively get the parent account, until there is no parent.
-        :return: account.account record
-        """
-        self.ensure_one()
-        if self.parent_id:
-            return self.parent_id.get_billing_ledger_account()
-        if self.tipo_conta == 'GR':
-            return self
-        return
-
-    def configure_grouping_category(self):
-        """Configure the grouping category of the account to use in the field 2.1.7 of the SAFT file."""
-        for account in self:
-            if len(account.code) <= 2:
-                account.tipo_conta = 'GR'
-            elif account.has_moves() or not account.children_ids:
-                account.tipo_conta = 'GM'
-            elif account.children_ids and not self.env['account.move.line'].search([('account_id', '=', account.id)]):
-                account.tipo_conta = 'GA'
-
     def has_moves(self, date_start=None, date_end=None):
         """Check if the account has posted moves in the given period. If no period is given, check if the account has
         any move.
@@ -157,19 +134,18 @@ class AccountAccount(models.Model):
             domain.append(('date', '<=', date_end))
         return self.env['account.move.line'].search_count(domain) > 0
 
-    def get_period_vals(self, parents, date_from, date_to, method, company_id):
-        """Method designed to provide the account's SAF-T relevant information, this includes opening and closing
-        credit and debit values. The returned opening values will depend on the method used to calculate them.
-        This values will feed the SAF-T report.
-        :param parents: list of parent accounts
-        :param date_from: date from which the period starts
-        :param date_to: date to which the period ends
-        :param method: method used to calculate the opening values. Possible values are:
-            - 'sum_until_date': sum all the moves until the date_from
-            - 'first_record': get the values from the first move of the period
-        :param company_id: company
-        :return: dictionary containing the opening and closing values for the account
+    def get_billing_ledger_account(self):
+        """Recursively get the parent account, until there is no parent.
+        :return: account.account record
         """
+        self.ensure_one()
+        if self.parent_id:
+            return self.parent_id.get_billing_ledger_account()
+        if self.tipo_conta == 'GR':
+            return self
+        return
+
+    def get_period_vals(self, parents, date_from, date_to, method, company_id):
         opening_move_domain = [
             ('parent_state', '=', 'posted'),
             ('account_id', 'in', [self.id] + self.children_ids.ids) if self in parents else ('account_id', '=', self.id)
@@ -210,3 +186,13 @@ class AccountAccount(models.Model):
             'closing_credit': closing_credit,
             'closing_debit': closing_debit,
         }
+
+    def configure_grouping_category(self):
+        """Configure the grouping category of the account to use in the field 2.1.7 of the SAFT file."""
+        for account in self:
+            if len(account.code) <= 2:
+                account.tipo_conta = 'GR'
+            elif account.has_moves() or not account.children_ids:
+                account.tipo_conta = 'GM'
+            elif account.children_ids and not self.env['account.move.line'].search([('account_id', '=', account.id)]):
+                account.tipo_conta = 'GA'

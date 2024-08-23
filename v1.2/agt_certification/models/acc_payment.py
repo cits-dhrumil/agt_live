@@ -18,23 +18,10 @@ tz_pt = timezone('Europe/Lisbon')
 
 class AccountPayment(models.Model):
     _inherit = 'account.payment'
-    
+
     def _get_sequence_for_atcud(self):
         for payment in self:
             return payment.journal_id.sequence_id
-    
-    def _compute_atcud(self):
-        for payment in self:
-            payment.atcud = ''
-            needs_atcud = self.env['ir.config_parameter'].sudo().get_param('needs_atcud')
-            if payment.hash and needs_atcud == 'True':
-                wizard_atcud = self.env['alert.atcud']
-                sequence_id = payment._get_sequence_for_atcud()
-                codigo_validacao_serie = wizard_atcud._get_codigo_validacao_serie(sequence_id, payment.date)
-                if codigo_validacao_serie:
-                    n_sequencial_serie = payment.name.split('/')[1]
-                    payment.atcud = _(codigo_validacao_serie) + '-' + n_sequencial_serie
-
 
     def _get_qr_code_generation(self):
         for payment in self:
@@ -92,58 +79,20 @@ class AccountPayment(models.Model):
                                                                 quatro_caratecters_hash,
                                                                 n_certificado, outras_infos)
 
-
-    def _compute_qr_code_image(self):
+    def _compute_atcud(self):
         for payment in self:
-            payment.qr_code_at_img = self.env['alert.atcud']._compute_qr_code_image(payment.qr_code_at)
-
-    hash = fields.Char(string="Hash", size=256, readonly=True, help="Unique hash of the sale order.", copy=False)
-    hash_control = fields.Char(string="Chave", size=40, copy=False)
-    hash_date = fields.Datetime(string="Data em que o hash foi gerado", copy=False)
-    atcud = fields.Char(compute='_compute_atcud', string='ATCUD')
-    qr_code_at = fields.Char(compute='_get_qr_code_generation', string='QR Code AT')
-    qr_code_at_img = fields.Binary("QR Code", compute='_compute_qr_code_image')
-    outstanding_account_id = fields.Many2one(
-        comodel_name='account.account',
-        string="Outstanding Account",
-        store=True,
-        compute='_compute_outstanding_account_id',
-        check_company=True)
-    payment_mechanism = fields.Selection([('CC', 'Cartão de crédito'),
-                                          ('CD', 'Cartão de débito'),
-                                          ('CH', 'Cheque bancário'),
-                                          ('CO', 'Cheque ou cartão oferta'),
-                                          ('CS', 'Compensação de saldos em conta corrente'),
-                                          ('DE', 'Dinheiro eletrónico, por exemplo residente em cartões de fidelidade ou de pontos'),
-                                          ('LC', 'Letra comercial'),
-                                          ('MB', 'Referências de pagamento para multibanco'),
-                                          ('NU', 'Numerário'),
-                                          ('OU', 'Outros meios aqui não assinalados'),
-                                          ('PR', 'Permuta de bens'),
-                                          ('TB', 'Transferência bancária ou débito direto autorizado'),
-                                          ('TR', 'Ticket restaurante'), ], string="Meio de pagamento", required=True,
-                                         readonly=True, default='NU', copy=False)
-
-    @api.depends('journal_id', 'payment_type', 'payment_method_line_id')
-    def _compute_outstanding_account_id(self):
-        for pay in self:
-            if pay.journal_id.default_account_id:
-                pay.outstanding_account_id = pay.journal_id.default_account_id.id
-            else:
-                pay.outstanding_account_id = False
-
-    def unlink(self):
-        if any(rec.hash != False and rec.partner_type != 'supplier' for rec in self):
-            raise UserError(_("Não pode apagar um pagamento que já tenha sido validado!"))
-
-        if any(rec.state != 'draft' and rec.payment_type == 'inbound' for rec in self):
-            raise UserError(_(u'Não pode eliminar pagamentos que não sejam rascunhos.'))
-        return super(AccountPayment, self).unlink()
-
+            payment.atcud = ''
+            needs_atcud = self.env['ir.config_parameter'].sudo().get_param('needs_atcud')
+            if payment.hash and needs_atcud == 'True':
+                wizard_atcud = self.env['alert.atcud']
+                sequence_id = payment._get_sequence_for_atcud()
+                codigo_validacao_serie = wizard_atcud._get_codigo_validacao_serie(sequence_id, payment.date)
+                if codigo_validacao_serie:
+                    n_sequencial_serie = payment.name.split('/')[1]
+                    payment.atcud = _(codigo_validacao_serie) + '-' + n_sequencial_serie
 
     def validar_hash(self):
         for payment in self:
-            # verificar se é a primeira factura ou nota de credito
             ano = datetime.now().year
             if payment.date:
                 ano = payment.date.year
@@ -160,7 +109,6 @@ class AccountPayment(models.Model):
                 ('hash', '!=', False),
                 ('state', '=', 'posted')
             ])
-            # Se não for a primeira factura ou nota de encomenda vai buscar o hash anterior
             antigoHash = False
             if numHash > 0:
                 antigoHash = self.env['account.payment'].search([
@@ -174,20 +122,44 @@ class AccountPayment(models.Model):
                 ], order='id desc', limit=1).hash
             return numHash, antigoHash
 
+    hash = fields.Char(string="Hash", size=256, readonly=True, help="Unique hash of the sale order.", copy=False)
+    hash_control = fields.Char(string="Key", size=40, copy=False)
+    hash_date = fields.Datetime(string="Date the hash was generated", copy=False)
+    atcud = fields.Char(compute='_compute_atcud', string='ATCUD')
+    qr_code_at = fields.Char(compute='_get_qr_code_generation', string='QR Code AT')
+    qr_code_at_img = fields.Binary("QR Code", compute='_compute_qr_code_image')
+    outstanding_account_id = fields.Many2one(
+        comodel_name='account.account',
+        string="Outstanding Account",
+        store=True,
+        compute='_compute_outstanding_account_id',
+        check_company=True)
+    payment_mechanism = fields.Selection([('CC', 'Credit Card'),
+                                          ('CD', 'Debit Card'),
+                                          ('CH', 'Bank check'),
+                                          ('CO', 'Check or gift card'),
+                                          ('CS', 'Clearance of current account balances'),
+                                          ('DE', 'Electronic money, for example resident on loyalty or points cards'),
+                                          ('LC', 'Business letter'),
+                                          ('MB', 'ATM payment references'),
+                                          ('NU', 'Cash'),
+                                          ('OU', 'Other means not indicated here'),
+                                          ('PR', 'Exchange of goods'),
+                                          ('TB', 'Bank transfer or direct debit authorized'),
+                                          ('TR', 'Restaurant Ticket'), ], string="Meio de pagamento", required=True,
+                                         readonly=True, default='NU', copy=False)
 
-    def create_hash(self):
+    def _compute_qr_code_image(self):
         for payment in self:
-            datasistema = str(payment.write_date)[:19]
-            datadocumento = payment.date
-            numHash, antigoHash = payment.validar_hash()
-            totalbruto = str(payment.amount)
-            if (totalbruto.find('.') + 2) == len(totalbruto):
-                totalbruto += "0"
-            number = payment.journal_id.saft_inv_type + ' ' + payment.name and payment.name or ''
-            values = creating_hash.hash(self, payment.journal_id.manual, datadocumento,
-                                          datasistema, number, numHash, antigoHash, totalbruto)
-            payment.write(values)
+            payment.qr_code_at_img = self.env['alert.atcud']._compute_qr_code_image(payment.qr_code_at)
 
+    @api.depends('journal_id', 'payment_type', 'payment_method_line_id')
+    def _compute_outstanding_account_id(self):
+        for pay in self:
+            if pay.journal_id.default_account_id:
+                pay.outstanding_account_id = pay.journal_id.default_account_id.id
+            else:
+                pay.outstanding_account_id = False
 
     def action_post(self):
         for payment in self:
@@ -223,9 +195,27 @@ class AccountPayment(models.Model):
                                     raise UserError(_(
                                         'Falta definir o codigo de validação de sequência AT. Para configurar, '
                                         'deverá aceder ao menu Faturação -> Configuração -> Configurar ATCUD'))
-                # FIM ATCUD#
-
-            #recibos predatados sao docs internos, nao vao no saft.
             if payment.partner_id and not payment.journal_id.predatado and payment.payment_type == 'inbound':
                 payment.create_hash()
         return super(AccountPayment, payment).action_post()
+
+    def create_hash(self):
+        for payment in self:
+            datasistema = str(payment.write_date)[:19]
+            datadocumento = payment.date
+            numHash, antigoHash = payment.validar_hash()
+            totalbruto = str(payment.amount)
+            if (totalbruto.find('.') + 2) == len(totalbruto):
+                totalbruto += "0"
+            number = payment.journal_id.saft_inv_type + ' ' + payment.name and payment.name or ''
+            values = creating_hash.hash(self, payment.journal_id.manual, datadocumento,
+                                          datasistema, number, numHash, antigoHash, totalbruto)
+            payment.write(values)
+
+    def unlink(self):
+        if any(rec.hash != False and rec.partner_type != 'supplier' for rec in self):
+            raise UserError(_("Não pode apagar um pagamento que já tenha sido validado!"))
+
+        if any(rec.state != 'draft' and rec.payment_type == 'inbound' for rec in self):
+            raise UserError(_(u'Não pode eliminar pagamentos que não sejam rascunhos.'))
+        return super(AccountPayment, self).unlink()
